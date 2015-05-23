@@ -1,0 +1,24 @@
+.token
+{
+    line-height: 1.2;
+    max-width: 230px;
+    text-overflow: ellipsis;
+    padding: 3px 8px 4px;
+    font-weight: bold;
+    box-sizing: border-box;
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.token_theme_dark
+{
+    background-color: #597DA3;
+    color: #fff;
+}
+
+.token_theme_light
+{
+    background-color: #e5e8ed;
+    color: #45688E;
+}
