@@ -1,9 +1,13 @@
 // Вставляем css для корневого блока page
-require('../css/page.css');
+require('../styles/page.styl');
 
 // Код начнет выполняться после загрузки DOM
 document.addEventListener('DOMContentLoaded', function () {
-    var input = document.getElementsByClassName('dropdown-ui__input')[0].addEventListener('focus', function() {
-        console.log('focus');
+    var Dropdown = require('../modules/dropdown.js');
+
+    var dropdown = new Dropdown({
+        id: '1',
+        userAvatar: true,
+        multiSelect: true
     });
 });
