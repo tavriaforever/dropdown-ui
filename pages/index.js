@@ -1,4 +1,4 @@
-// Вставляем css для корневого блока page
+// Вставляем css для страницы
 require('../styles/page.styl');
 
 var events = require('../modules/events'),
@@ -11,13 +11,13 @@ events.ready(function () {
     var dropdown = new Dropdown({
         id: 'first',
         userAvatar: true,
-        multiSelect: true,
+        //multiSelect: true,
         items: [
-            { name: 'Андрей Рогозов', domain: 'rogozov' },
-            { name: 'Николай Ильченко', domain: 'tavriaforever' },
-            { name: 'Татьяна Неземная', domain: 'nezemnaya' },
-            { name: 'Сергей Жиленков', domain: 'zila' },
-            { name: 'Борис Сапак', domain: 'baklan' }
+            { id: 1, title: 'Андрей Рогозов', info: 'rogozov' },
+            { id: 2, title: 'Николай Ильченко', info: 'tavriaforever' },
+            { id: 3, title: 'Татьяна Неземная', info: 'nezemnaya' },
+            { id: 4, title: 'Сергей Жиленков', info: 'zila' },
+            { id: 5, title: 'Борис Сапак', info: 'baklan' }
         ]
     });
 });

@@ -17,7 +17,6 @@ module.exports = {
     },
 
     setText: function (elem, text) {
-        var hasInnerText = !!document.getElementsByTagName('body')[0].innerText;
-        return hasInnerText ? elem.textContent = text : elem.innerText = text;
+        return elem.textContent = text;
     }
 };

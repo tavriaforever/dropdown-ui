@@ -87,31 +87,35 @@ $dropdown-ui-border-color = #c0cad5
 
         &:hover,
         &_active
-            background: #f1f5f9
+            background-color: #f1f5f9
             border-color: #e1e7ed
 
         &:last-child
             border-bottom: none
 
-    &__item-text
+        &_error
+            min-height: initial
+            background-color: #f1f5f9
+
+    &__item-title
         display: inline-block
         white-space: normal
 
-    &__item-domain
+    &__item-info
         color: $color-grey
         padding-top: 2px
         overflow: hidden
         white-space: nowrap
         text-overflow: ellipsis
 
-    &__avatar
+    &__image-item
         white-space: normal
         display: inline-block
         vertical-align: top
         overflow: hidden
         margin-right: 5px
 
-    &__avatar-image
+    &__image
         border-radius: $radius
 
     // Когда dropdown открыт

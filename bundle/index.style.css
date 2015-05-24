@@ -134,31 +134,35 @@
 }
 .dropdown-ui__item:hover,
 .dropdown-ui__item_active {
-  background: #f1f5f9;
+  background-color: #f1f5f9;
   border-color: #e1e7ed;
 }
 .dropdown-ui__item:last-child {
   border-bottom: none;
 }
-.dropdown-ui__item-text {
+.dropdown-ui__item_error {
+  min-height: initial;
+  background-color: #f1f5f9;
+}
+.dropdown-ui__item-title {
   display: inline-block;
   white-space: normal;
 }
-.dropdown-ui__item-domain {
+.dropdown-ui__item-info {
   color: #777;
   padding-top: 2px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.dropdown-ui__avatar {
+.dropdown-ui__image-item {
   white-space: normal;
   display: inline-block;
   vertical-align: top;
   overflow: hidden;
   margin-right: 5px;
 }
-.dropdown-ui__avatar-image {
+.dropdown-ui__image {
   border-radius: 2px;
 }
 .dropdown-ui_open .dropdown-ui__popup {

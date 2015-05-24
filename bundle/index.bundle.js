@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "dc7deb7215cea8a26d08"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "22e066689ed665903001"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -659,21 +659,22 @@
 
 	// indexOf IE8-
 	if (!Array.prototype.indexOf) {
-	    Array.prototype.indexOf = function(elt /*, from*/) {
-	        var len = this.length >>> 0;
+	    Array.prototype.indexOf = function(str /*, from*/) {
+	        var length = this.length >>> 0,
+	            from = Number(arguments[1]) || 0;
 
-	        var from = Number(arguments[1]) || 0;
-	        from = (from < 0)
-	            ? Math.ceil(from)
-	            : Math.floor(from);
-	        if (from < 0)
-	            from += len;
+	        from = (from < 0) ? Math.ceil(from) : Math.floor(from);
 
-	        for (; from < len; from++) {
-	            if (from in this &&
-	                this[from] === elt)
-	                return from;
+	        if (from < 0) {
+	            from += length;
 	        }
+
+	        for (; from < length; from++) {
+	            if (from in this && this[from] === str) {
+	                return from;
+	            }
+	        }
+
 	        return -1;
 	    };
 	}
@@ -722,18 +723,40 @@
 	    };
 	}
 
+	// textContent
+	if (Object.defineProperty
+	        && Object.getOwnPropertyDescriptor
+	            && Object.getOwnPropertyDescriptor(Element.prototype, 'textContent')
+	                && !Object.getOwnPropertyDescriptor(Element.prototype, 'textContent').get) {
+	    (function() {
+	        var innerText = Object.getOwnPropertyDescriptor(Element.prototype, 'innerText');
+	        Object.defineProperty(Element.prototype, 'textContent',
+	            {
+	                get: function() {
+	                    return innerText.get.call(this);
+	                },
+	                set: function(s) {
+	                    return innerText.set.call(this, s);
+	                }
+	            }
+	        );
+	    })();
+	}
+
+
+
 
 
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var helpers = __webpack_require__(9),
+	var helpers = __webpack_require__(11),
 	    $ = helpers.$,
 	    setText = helpers.setText,
 	    events = __webpack_require__(3),
-	    classList = __webpack_require__(10),
-	    text = __webpack_require__(16);
+	    classList = __webpack_require__(12),
+	    text = __webpack_require__(13);
 
 	function Dropdown (options) {
 	    var self = this;
@@ -753,12 +776,14 @@
 	        controlItem: 'dropdown-ui__control-item',
 	        tokens: 'dropdown-ui__tokens',
 	        token: 'dropdown-ui__token',
+	        tokenDelete: 'dropdown-ui__token-delete',
 	        tokenAdd: 'dropdown-ui__token-add',
 	        popup: 'dropdown-ui__popup',
 	        list: 'dropdown-ui__list',
 	        item: 'dropdown-ui__item',
-	        itemName: 'dropdown-ui__item-name',
-	        itemDomain: 'dropdown-ui__item-domain'
+	        itemError: 'dropdown-ui__item_error',
+	        itemTitle: 'dropdown-ui__item-title',
+	        itemInfo: 'dropdown-ui__item-info'
 	    };
 
 	    // 1. Получаем html элемент дропдауна
@@ -781,6 +806,8 @@
 	        } else {
 	            self.$dropdown = self.$dropdown[0];
 	        }
+
+	        console.log('get drop');
 	    }
 
 	    function buildTemplate () {
@@ -815,7 +842,11 @@
 	        self.$popup.appendChild(self.$list);
 
 	        // Заполняем список
-	        fillList();
+	        var items = self.options.items;
+	        if (!items || !items.length) {
+	            throw new Error('dropdown-ui: Добавьте элементы для выбора')
+	        }
+	        fillList(items);
 
 	        fragment.appendChild(self.$control);
 	        fragment.appendChild(self.$popup);
@@ -828,24 +859,36 @@
 	        var cls = self.cls,
 	            fragment = document.createDocumentFragment();
 
-	        items = items || self.options.items;
+	        // Если массив состоит из 1 элемента и передана ошибка - выводим ее
+	        if (items.length === 1 && items[0].errorMessage) {
+	            var $item = createElem('div', [cls.item, cls.itemError]);
 
-	        // Генерируем список
-	        items.forEach(function (item) {
-	            var $item = createElem('div', cls.item),
-	                $name = createElem('div', cls.itemName),
-	                $domain = createElem('div', cls.itemDomain);
-
-	            // Вставляем текст для составных частей
-	            setText($name, item.name);
-	            setText($domain, item.domain);
-
-	            // Вставляем составные части в элемент
-	            $item.appendChild($name);
-	            $item.appendChild($domain);
-
+	            setText($item, items[0].errorMessage);
 	            fragment.appendChild($item);
-	        });
+	        } else {
+	            // Генерируем список
+	            items.forEach(function (item) {
+	                if (item.hide) return;
+
+	                var $item = createElem('div', cls.item),
+	                    $title = createElem('div', cls.itemTitle),
+	                    $info = createElem('div', cls.itemInfo);
+
+	                // Вставляем текст для составных частей
+	                setText($title, item.title);
+	                setText($info, item.info);
+
+	                // Добавляем data атрибут с id
+	                $item.setAttribute('data-dropdown-item', item.id);
+
+	                // Вставляем составные части в элемент
+	                $item.appendChild($title);
+	                $item.appendChild($info);
+
+	                // Вставляем элемент во фрагмент
+	                fragment.appendChild($item);
+	            });
+	        }
 
 	        // Очищаем список и Вставляем элементы
 	        self.$list.innerHTML = '';
@@ -885,6 +928,12 @@
 
 	        // Клик по стрелке – тоглим дропдаун
 	        events.addEvent(self.$arrow, 'click', toggle);
+
+	        // Клик по элементу списка
+	        events.addEvent(self.$list, 'click', onListClick);
+
+	        // Клик по крестику токена для удаления
+	        events.addEvent(self.$tokens, 'click', onTokensClick);
 	    }
 
 	    /**
@@ -931,48 +980,130 @@
 	        var target = e.target || e.srcElement,
 	            value = target.value,
 	            items = self.options.items,
-	            newItems = [];
+	            filtered = [];
 
-	        // 1. Фильтруем в обычном порядке,
-	        // предпологая, что пользователь ввел текст правильно рого
-	        newItems = filter(items, value);
+	        // 1. Фильтруем в обычном порядке, предпологая, что пользователь ввел текст правильно рого
+	        filtered = filter(items, value);
 
-	        // 2. Если не нашли – фильтруем на случай ввода транслита rogo
-	        if (!newItems.length) {
-	            newItems = filter(items, text.translit('en', 'ru', value));
+	        // 2. Если не нашли – фильтруем на случай ввода транслита rogo -> рого
+	        if (!filtered.length) {
+	            filtered = filter(items, text.translit('en', 'ru', value));
 	        }
 
-	        // 3. Фильтруем на случай ввода hjuj (рого)
-	        if (!newItems.length) {
-	            newItems = filter(items, text.replace('en', 'ru', value));
+	        // 3. Если не нашли – Фильтруем на случай ввода hjuj -> рого
+	        if (!filtered.length) {
+	            filtered = filter(items, text.replace('en', 'ru', value));
 	        }
 
-	        // 4. Фильтруем на случай ввода кщпщ (rogo)
-	        if (!newItems.length) {
+	        // 4. Если не нашли – Фильтруем на случай ввода кщпщ -> rogo
+	        if (!filtered.length) {
 	            // кщпщ -> rogo
 	            var newValue = text.replace('ru', 'en', value);
 	            // rogo -> рого
 	            newValue = text.translit('en', 'ru', newValue);
-	            newItems = filter(items, newValue);
+	            filtered = filter(items, newValue);
 	        }
 
 	        function filter (items, searchValue) {
 	            return items.filter(function (item) {
-	                var name = item.name;
+	                var title = item.title;
 
-	                name = name.toLowerCase();
+	                title = title.toLowerCase();
 	                searchValue = searchValue.toLowerCase();
 
-	                return name.indexOf(searchValue) !== -1;
+	                return title.indexOf(searchValue) !== -1;
 	            })
 	        }
 
-	        fillList(newItems);
+	        if (!filtered.length) {
+	            filtered.push({ errorMessage: 'Пользователь не найден' });
+	        }
+
+	        fillList(filtered);
+	    }
+
+	    function onListClick (e) {
+	        var event = e || window.event,
+	            target = event.target || event.srcElement;
+
+	        /*
+	            Перебираем DOM ноды, пока событие не всплывет до элемента списка
+	        */
+	        while (target !== this) {
+	            if (classList.has(target, self.cls.item)) {
+	                // Нашли элемент списка, готовим его к вставке __tokens
+	                var targetId = target.getAttribute('data-dropdown-item'),
+	                    targetItem,
+	                    items = self.options.items;
+
+	                /*
+	                    Перебираем элементы и если id совпадает c data-id элемента по которому кликнули –
+	                    сохраняем элемент в переменную и ставим ему hide:true, чтобы скрыть из списка,
+	                    так как он уже выбран
+	                */
+	                items.forEach(function (item) {
+	                    if (item.id === +targetId) {
+	                        targetItem = item;
+	                        item.hide = true;
+	                    }
+	                });
+
+	                // Обновляем список, чтоб в нем уже не было выбранных элементов
+	                fillList(items);
+
+	                // Добавляем токен
+	                if (targetItem) {
+	                    addToken(targetItem);
+	                }
+
+	                // Выходим из цикла
+	                return;
+	            }
+
+	            target = target.parentNode;
+	        }
+	    }
+
+	    function onTokensClick (e) {
+	        var event = e || window.event,
+	            target = event.target || event.srcElement;
+
+	        if (classList.has(target, self.cls.tokenDelete)) {
+	            removeToken(target);
+	        }
+	    }
+
+	    function addToken (item) {
+	        var cls = self.cls,
+	            $token = createElem('div', [cls.token, 'token', 'token_theme_dark']),
+	            $tokenDelete = createElem('div', [cls.tokenDelete, 'token__delete', 'token__icon']);
+
+	        setText($token, item.title);
+	        $token.appendChild($tokenDelete);
+	        $token.setAttribute('data-dropdown-token', item.id);
+	        self.$tokens.appendChild($token);
+	        classList.remove(self.$dropdown, cls.open);
+	    }
+
+	    function removeToken (target) {
+	        var $token = target.parentNode,
+	            tokenId = $token.getAttribute('data-dropdown-token'),
+	            items = self.options.items;
+
+	        items.forEach(function (item) {
+	            if (item.id === +tokenId) {
+	                item.hide = false;
+	            }
+	        });
+
+	        $token.parentNode.removeChild($token);
+
+	        // Обновляем список, добавляем удаленный элементы
+	        fillList(items);
 	    }
 	}
 
 	module.exports = Dropdown;
-
 
 
 /***/ },
@@ -1007,17 +1138,12 @@
 
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
+/* 7 */,
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Вставляем css для корневого блока page
-	__webpack_require__(7);
+	// Вставляем css для страницы
+	__webpack_require__(9);
 
 	var events = __webpack_require__(3),
 	    polyfills = __webpack_require__(4);
@@ -1029,13 +1155,13 @@
 	    var dropdown = new Dropdown({
 	        id: 'first',
 	        userAvatar: true,
-	        multiSelect: true,
+	        //multiSelect: true,
 	        items: [
-	            { name: 'Андрей Рогозов', domain: 'rogozov' },
-	            { name: 'Николай Ильченко', domain: 'tavriaforever' },
-	            { name: 'Татьяна Неземная', domain: 'nezemnaya' },
-	            { name: 'Сергей Жиленков', domain: 'zila' },
-	            { name: 'Борис Сапак', domain: 'baklan' }
+	            { id: 1, title: 'Андрей Рогозов', info: 'rogozov' },
+	            { id: 2, title: 'Николай Ильченко', info: 'tavriaforever' },
+	            { id: 3, title: 'Татьяна Неземная', info: 'nezemnaya' },
+	            { id: 4, title: 'Сергей Жиленков', info: 'zila' },
+	            { id: 5, title: 'Борис Сапак', info: 'baklan' }
 	        ]
 	    });
 	});
@@ -1043,6 +1169,13 @@
 
 /***/ },
 /* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 10 */,
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1064,14 +1197,13 @@
 	    },
 
 	    setText: function (elem, text) {
-	        var hasInnerText = !!document.getElementsByTagName('body')[0].innerText;
-	        return hasInnerText ? elem.textContent = text : elem.innerText = text;
+	        return elem.textContent = text;
 	    }
 	};
 
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {
@@ -1128,12 +1260,7 @@
 
 
 /***/ },
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */,
-/* 16 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {

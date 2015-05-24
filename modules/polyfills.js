@@ -1,20 +1,21 @@
 // indexOf IE8-
 if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function(elt /*, from*/) {
-        var len = this.length >>> 0;
+    Array.prototype.indexOf = function(str /*, from*/) {
+        var length = this.length >>> 0,
+            from = Number(arguments[1]) || 0;
 
-        var from = Number(arguments[1]) || 0;
-        from = (from < 0)
-            ? Math.ceil(from)
-            : Math.floor(from);
-        if (from < 0)
-            from += len;
+        from = (from < 0) ? Math.ceil(from) : Math.floor(from);
 
-        for (; from < len; from++) {
-            if (from in this &&
-                this[from] === elt)
-                return from;
+        if (from < 0) {
+            from += length;
         }
+
+        for (; from < length; from++) {
+            if (from in this && this[from] === str) {
+                return from;
+            }
+        }
+
         return -1;
     };
 }
@@ -62,4 +63,26 @@ if (!Array.prototype.filter) {
         return res;
     };
 }
+
+// textContent
+if (Object.defineProperty
+        && Object.getOwnPropertyDescriptor
+            && Object.getOwnPropertyDescriptor(Element.prototype, 'textContent')
+                && !Object.getOwnPropertyDescriptor(Element.prototype, 'textContent').get) {
+    (function() {
+        var innerText = Object.getOwnPropertyDescriptor(Element.prototype, 'innerText');
+        Object.defineProperty(Element.prototype, 'textContent',
+            {
+                get: function() {
+                    return innerText.get.call(this);
+                },
+                set: function(s) {
+                    return innerText.set.call(this, s);
+                }
+            }
+        );
+    })();
+}
+
+
 
