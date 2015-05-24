@@ -17,7 +17,7 @@ $dropdown-ui-border-color = #c0cad5
         cursor: text
         position: relative
 
-    &__open
+    &__arrow
         background: url('../images/dropdown__arrow.png') no-repeat 50%
         width: 21px
         height: 24px
@@ -32,13 +32,17 @@ $dropdown-ui-border-color = #c0cad5
         margin: 2px 2px -2px 2px
 
     &__token,
-    &__add-token
+    &__token-add
         margin-right: 4px
         margin-bottom: 4px
         float: left
 
-    &__add-token
+    &__token-add
+        display: none
         cursor: pointer
+
+        &_show
+            display: block
 
     &__input
         cursor: text
@@ -67,6 +71,7 @@ $dropdown-ui-border-color = #c0cad5
         overflow: hidden
         border: solid $dropdown-ui-border-color
         border-width: 0 1px 1px
+        z-index: 1000
 
     &__list
         max-height: 200px

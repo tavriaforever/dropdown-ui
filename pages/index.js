@@ -11,6 +11,13 @@ events.ready(function () {
     var dropdown = new Dropdown({
         id: 'first',
         userAvatar: true,
-        multiSelect: true
+        multiSelect: true,
+        items: [
+            { name: 'Андрей Рогозов', domain: 'rogozov' },
+            { name: 'Николай Ильченко', domain: 'tavriaforever' },
+            { name: 'Татьяна Неземная', domain: 'nezemnaya' },
+            { name: 'Сергей Жиленков', domain: 'zila' },
+            { name: 'Борис Сапак', domain: 'baklan' }
+        ]
     });
 });

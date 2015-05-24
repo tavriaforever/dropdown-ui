@@ -10,9 +10,14 @@ module.exports = {
      * Пример использования:
      * $('.myNode') -> вернем массив элементов с указанным классом
      * @param elem {HTMLElement} - DOM нода
-     * @returns {Array} - массив найденных элементов по селектору
+     * @returns {} - массив найденных элементов по селектору
      */
     $: function(elem) {
         return document.querySelectorAll(elem);
+    },
+
+    setText: function (elem, text) {
+        var hasInnerText = !!document.getElementsByTagName('body')[0].innerText;
+        return hasInnerText ? elem.textContent = text : elem.innerText = text;
     }
 };
