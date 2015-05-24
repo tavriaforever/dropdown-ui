@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "ced94af7499937bf6bc9"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "7123a5882f7b35d52af8"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -533,11 +533,16 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(2);
-	module.exports = __webpack_require__(5);
+	module.exports = __webpack_require__(7);
 
 
 /***/ },
-/* 1 */,
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -575,7 +580,7 @@
 					check();
 				}
 
-				__webpack_require__(3)(updatedModules, updatedModules);
+				__webpack_require__(6)(updatedModules, updatedModules);
 
 				if(upToDate()) {
 					console.log("[HMR] App is up to date.");
@@ -607,6 +612,177 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * Модуль для кроссбраузерной подписки на DOM события
+	 * - Современные браузеры - addEventListener/removeEventListener
+	 * - IE8 - attachEvent/detachEvent
+	 *
+	 * Пример использования:
+	 * var func = function() { alert('Ничоси');
+	 * addEvent(elem, 'click', func});
+	 * removeEvent(elem, 'click', func });
+	 */
+
+	var isSupportModernEvent = !!document.addEventListener;
+
+	module.exports = {
+	    /**
+	     * Подписка на DOM событие
+	     * @param elem {HTMLElement} - DOM нода (document.getElementBy ...)
+	     * @param type {Object} - тип события (click, mouseout, focus, ...)
+	     * @param handler {Function} - обработчик события
+	     */
+	    addEvent: function (elem, type, handler) {
+	        return isSupportModernEvent ?
+	            elem.addEventListener(type, handler, false) :
+	                elem.attachEvent('on' + type, handler);
+	    },
+
+	    /**
+	     * Отписка от DOM события
+	     * @param elem {HTMLElement} - DOM нода (document.getElementBy ...)
+	     * @param type {Object} - тип события (click, mouseout, focus, ...)
+	     * @param handler {Function} - обработчик события
+	     */
+	    removeEvent: function (elem, type, handler) {
+	        return isSupportModernEvent ?
+	            elem.removeEventListener(type, handler, false) :
+	            elem.detachEvent('on' + type, handler);
+	    },
+
+	    ready: function (handler) {
+	        return isSupportModernEvent ?
+	            document.addEventListener('DOMContentLoaded', handler, false) :
+	                document.attachEvent('onreadystatechange', handler);
+	    }
+	};
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * IndexOf
+	 */
+	if (!Array.prototype.indexOf) {
+	    Array.prototype.indexOf = function(elt /*, from*/) {
+	        var len = this.length >>> 0;
+
+	        var from = Number(arguments[1]) || 0;
+	        from = (from < 0)
+	            ? Math.ceil(from)
+	            : Math.floor(from);
+	        if (from < 0)
+	            from += len;
+
+	        for (; from < len; from++) {
+	            if (from in this &&
+	                this[from] === elt)
+	                return from;
+	        }
+	        return -1;
+	    };
+	}
+
+
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var helpers = __webpack_require__(9),
+	    events = __webpack_require__(3),
+	    classList = __webpack_require__(15);
+
+	function Dropdown (options) {
+	    var $ = helpers.$,
+	        selector = '[data-dropdown-id=' + options.id + ']',
+	        cls = {
+	            root: 'dropdown-ui',
+	            open: 'dropdown-ui_open'
+	        },
+	        $dropdown = $(selector)[0],
+	        $input = $(selector + ' .dropdown-ui__input')[0],
+	        $control = $(selector + ' .dropdown-ui__control')[0],
+	        $openArrow = $(selector + ' .dropdown-ui__open')[0],
+	        $popup = $(selector + ' .dropdown-ui__popup')[0];
+
+
+	    // Закрываем dropdown по клику вне блока
+	    events.addEvent(document, 'click', function (e) {
+	        var target = e.target || e.srcElement;
+
+	        if (classList.has($dropdown, cls.open)) {
+	            if (classList.has(target, cls.root) || !$dropdown.contains(target)) {
+	                classList.remove($dropdown, cls.open);
+	            }
+	        }
+	    });
+
+	    // Клик по стрелке – тоглим дропдаун
+	    events.addEvent($openArrow, 'click', toggle);
+
+	    // Focus в инпуте – открываем дропдаун
+	    events.addEvent($input, 'focus', open);
+
+	    /**
+	     * Обработчик открытия дропдауна
+	     * @param e {Object}
+	     */
+	    function open (e) {
+	        classList.add($dropdown, cls.open);
+
+	        // Вызываем callback при открытии
+	        options.onOpen && options.onOpen();
+
+	        // Подписываем на ввод данных в инпут
+	        events.addEvent($input, 'keyup', onKeyUp);
+	    }
+
+	    /**
+	     * Обработчик закрытия дропдауна
+	     * @param e {Object}
+	     */
+	    function close (e) {
+	        classList.remove($dropdown, cls.open);
+
+	        // Вызываем callback при закрытии
+	        options.onClose && options.onClose();
+
+	        // Отписываемся от ввода данных в инпут
+	        events.removeEvent($input, 'keyup', onKeyUp);
+	    }
+
+	    /**
+	     * Обработчик 'тоглера' открытия/закрытия дропдаура
+	     * @param e {Object}
+	     */
+	    function toggle (e) {
+	        classList.has($dropdown, cls.open) ? close(e) : open(e);
+	    }
+
+	    /**
+	     * Обработчик ввода данных в инпут
+	     * @param e
+	     */
+	    function onKeyUp (e) {
+	        var target = e.target || e.srcElement,
+	            value = target.value;
+	    }
+	}
+
+	module.exports = Dropdown;
+
+
+
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/*
 		MIT License http://www.opensource.org/licenses/mit-license.php
 		Author Tobias Koppers @sokra
@@ -635,28 +811,112 @@
 
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 5 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Вставляем css для корневого блока page
-	__webpack_require__(4);
+	__webpack_require__(1);
+
+	var events = __webpack_require__(3),
+	    polyfills = __webpack_require__(4);
 
 	// Код начнет выполняться после загрузки DOM
-	//document.addEventListener('DOMContentLoaded', function () {
-	//    //var Dropdown = require('../modules/dropdown.js');
-	//    //
-	//    //var dropdown = new Dropdown({
-	//    //    id: 'first',
-	//    //    userAvatar: true,
-	//    //    multiSelect: true
-	//    //});
-	//});
+	events.ready(function () {
+	    var Dropdown = __webpack_require__(5);
+
+	    var dropdown = new Dropdown({
+	        id: 'first',
+	        userAvatar: true,
+	        multiSelect: true
+	    });
+	});
+
+
+/***/ },
+/* 8 */,
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Модуль с набором хелперов для работы с DOM нодами
+	 */
+
+	module.exports = {
+
+	    /**
+	     * Обертка над querySelectorAll
+	     * для выборки элементов в DOM дереве по селектору.
+	     * Пример использования:
+	     * $('.myNode') -> вернем массив элементов с указанным классом
+	     * @param elem {HTMLElement} - DOM нода
+	     * @returns {Array} - массив найденных элементов по селектору
+	     */
+	    $: function(elem) {
+	        return document.querySelectorAll(elem);
+	    }
+	};
+
+
+/***/ },
+/* 10 */,
+/* 11 */,
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = {
+	    add: function (elem, className) {
+	        if (elem.classList) {
+	            elem.classList.add(className);
+	        } else {
+	            if (!this.has(elem, className)) {
+	                elem.className += ' ' + className;
+	            }
+	        }
+	    },
+
+	    remove: function (elem, className) {
+	        if (elem.classList) {
+	            elem.classList.remove(className);
+	        } else {
+	            var newClass = ' ' + elem.className.replace( /[\t\r\n]/g, ' ') + ' ';
+
+	            if (this.has(elem, className)) {
+	                while (newClass.indexOf(' ' + className + ' ') >= 0 ) {
+	                    newClass = newClass.replace(' ' + className + ' ', ' ');
+	                }
+	                elem.className = newClass.replace(/^\s+|\s+$/g, '');
+	            }
+	        }
+	    },
+
+	    toggle: function (elem, className) {
+	        if (elem.classList) {
+	            elem.classList.toggle(className);
+	        } else {
+	            var newClass = ' ' + elem.className.replace( /[\t\r\n]/g, ' ' ) + ' ';
+
+	            if (this.has(elem, className)) {
+	                while (newClass.indexOf(' ' + className + ' ') >= 0 ) {
+	                    newClass = newClass.replace( ' ' + className + ' ' , ' ' );
+	                }
+	                elem.className = newClass.replace(/^\s+|\s+$/g, '');
+	            } else {
+	                elem.className += ' ' + className;
+	            }
+	        }
+	    },
+
+	    has: function (elem, className) {
+	        if (elem.classList) {
+	            return elem.classList.contains(className);
+	        } else {
+	            return new RegExp(' ' + className + ' ').test(' ' + elem.className + ' ');
+	        }
+	    }
+	};
 
 
 /***/ }
