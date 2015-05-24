@@ -1,5 +1,6 @@
 @import 'variables.styl'
 @import 'token.styl'
+@import 'clearfix.styl'
 
 $dropdown-ui-bg-color = white
 $dropdown-ui-border-color = #c0cad5
@@ -15,25 +16,32 @@ $dropdown-ui-border-color = #c0cad5
         cursor: text
         position: relative
 
-        &::after
-            content: ''
-            background: url('../images/dropdown__arrow_2x.png') no-repeat 50%
-            background-size: 21px 24px
-            width: 21px
-            height: 24px
-            overflow: hidden
-            cursor: pointer
-            position: absolute
-            right: 0
-            top: 0
+    &__open
+        background: url('../images/dropdown__arrow.png') no-repeat 50%
+        width: 21px
+        height: 24px
+        overflow: hidden
+        cursor: pointer
+        position: absolute
+        right: 0
+        top: 0
 
-    &__tokens
-        margin: 2px
+    &__control-item
         cursor: default
-        display: inline-block
+        margin: 2px 2px -2px 2px
+
+    &__token,
+    &__add-token
+        margin-right: 4px
+        margin-bottom: 4px
+        float: left
+
+    &__add-token
+        cursor: pointer
 
     &__input
-        display: inline-block
+        cursor: text
+        width: 100%
         outline: none
         border: none
         box-sizing: border-box
@@ -48,6 +56,7 @@ $dropdown-ui-border-color = #c0cad5
             color: black;
 
     &__popup
+        /*display: none;*/
         margin-top: 1px
         background: $dropdown-ui-bg-color
         top: 100%
@@ -72,10 +81,8 @@ $dropdown-ui-border-color = #c0cad5
 
         &:hover,
         &_active
-        {
             background: #f1f5f9
             border-color: #e1e7ed
-        }
 
         &:last-child
             border-bottom: none

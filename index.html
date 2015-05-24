@@ -1,28 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Document</title>
-    <script src="http://localhost:8080/webpack-dev-server.js"></script>
-    <script src="/index.bundle.js"></script>
+    <script src="bundle/index.bundle.js"></script>
+    <link rel="stylesheet" href="bundle/index.style.css" />
 </head>
 <body class="page">
     <div class="page__example">
-        <div class="dropdown-ui clearfix" data-d-id="first">
+        <div class="dropdown-ui clearfix" data-dropdown-id="first">
             <div class="dropdown-ui__control">
-                <div class="dropdown-ui__tokens">
-                    <div class="dropdown-ui__token token token_theme_dark">Николай Ильченко<i class="token__delete"></i></div>
-                    <div class="dropdown-ui__token token token_theme_dark">Татьяна Неземная<i class="token__delete"></i></div>
-                    <div class="dropdown-ui__token token token_theme_dark">Сергей Жиленков<i class="token__delete"></i></div>
-                </div>
-                <div class="dropdown-ui__add-token token token_theme_light">Добавить<i class="token__delete"></i></div>
-                <input type="text" class="dropdown-ui__input" placeholder="Введите имя пользователя или email" />
+                <i class="dropdown-ui__open"></i>
+                <!--<div class="dropdown-ui__tokens dropdown-ui__control-item">-->
+                    <!--<div class="dropdown-ui__token token token_theme_dark">Николай Ильченко<i class="token__delete token__icon"></i></div>-->
+                    <!--<div class="dropdown-ui__token token token_theme_dark">Татьяна Неземная<i class="token__delete token__icon"></i></div>-->
+                    <!--&lt;!&ndash;<div class="dropdown-ui__token token token_theme_dark">Сергей Жиленков<i class="token__delete token__icon"></i></div>&ndash;&gt;-->
+                    <!--<div class="dropdown-ui__add-token token token_theme_light">Добавить<i class="token__add token__icon"></i></div>-->
+                <!--</div>-->
+                <input type="text" class="dropdown-ui__control-item dropdown-ui__input" placeholder="Введите имя пользователя или email" />
             </div>
             <div class="dropdown-ui__popup">
                 <div class="dropdown-ui__list">
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/tavriaforever.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/tavriaforever.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Николай Ильченко</div>
@@ -31,7 +34,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/nezemnaya.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/nezemnaya.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Татьяна Неземная</div>
@@ -40,7 +43,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/zila.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/zila.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Сергей Жиленков</div>
@@ -49,7 +52,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/baklan.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/baklan.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Борис Сапак</div>
@@ -59,7 +62,7 @@
 
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/tavriaforever.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/tavriaforever.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Николай Ильченко</div>
@@ -68,7 +71,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/nezemnaya.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/nezemnaya.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Татьяна Неземная</div>
@@ -77,7 +80,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/zila.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/zila.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Сергей Жиленков</div>
@@ -86,7 +89,7 @@
                     </div>
                     <div class="dropdown-ui__item">
                         <div class="dropdown-ui__avatar">
-                            <img class="dropdown-ui__avatar-image" src="/images/temp/baklan.jpg" width="32" height="32" />
+                            <img class="dropdown-ui__avatar-image" src="images/temp/baklan.jpg" width="32" height="32" />
                         </div>
                         <div class="dropdown-ui__item-text">
                             <div class="dropdown-ui__item-name">Борис Сапак</div>
