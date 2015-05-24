@@ -149,21 +149,25 @@
   white-space: normal;
 }
 .dropdown-ui__item-info {
+  display: table-cell;
+  vertical-align: middle;
+}
+.dropdown-ui__item-addition {
   color: #777;
   padding-top: 2px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.dropdown-ui__image-item {
-  white-space: normal;
-  display: inline-block;
-  vertical-align: top;
-  overflow: hidden;
-  margin-right: 5px;
+.dropdown-ui__item-image-wrap {
+  display: table-cell;
+  width: 32px;
+  vertical-align: middle;
+  padding-right: 10px;
 }
-.dropdown-ui__image {
+.dropdown-ui__item-image {
   border-radius: 2px;
+  vertical-align: middle;
 }
 .dropdown-ui_open .dropdown-ui__popup {
   display: block;
@@ -180,4 +184,12 @@
 .page__example {
   width: 500px;
   margin: 50px auto;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #45688e;
 }

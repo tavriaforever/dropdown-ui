@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "22e066689ed665903001"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "e039c7178d3e31deb252"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -751,12 +751,12 @@
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var helpers = __webpack_require__(11),
+	var helpers = __webpack_require__(9),
 	    $ = helpers.$,
 	    setText = helpers.setText,
 	    events = __webpack_require__(3),
-	    classList = __webpack_require__(12),
-	    text = __webpack_require__(13);
+	    classList = __webpack_require__(10),
+	    text = __webpack_require__(11);
 
 	function Dropdown (options) {
 	    var self = this;
@@ -767,6 +767,10 @@
 	        throw new Error('dropdown-ui: В опциях не указан id');
 	    }
 
+	    // Здесь будут хранится id выбранных элементов
+	    self.selectedItems = [];
+
+	    // Дефайним css классы для возможной смены верстки
 	    this.cls = {
 	        root: 'dropdown-ui',
 	        open: 'dropdown-ui_open',
@@ -778,12 +782,16 @@
 	        token: 'dropdown-ui__token',
 	        tokenDelete: 'dropdown-ui__token-delete',
 	        tokenAdd: 'dropdown-ui__token-add',
+	        tokenAddShow: 'dropdown-ui__token-add_show',
 	        popup: 'dropdown-ui__popup',
 	        list: 'dropdown-ui__list',
 	        item: 'dropdown-ui__item',
 	        itemError: 'dropdown-ui__item_error',
+	        itemInfo: 'dropdown-ui__item-info',
 	        itemTitle: 'dropdown-ui__item-title',
-	        itemInfo: 'dropdown-ui__item-info'
+	        itemAddition: 'dropdown-ui__item-addition',
+	        itemImageWrap: 'dropdown-ui__item-image-wrap',
+	        itemImage: 'dropdown-ui__item-image'
 	    };
 
 	    // 1. Получаем html элемент дропдауна
@@ -806,8 +814,6 @@
 	        } else {
 	            self.$dropdown = self.$dropdown[0];
 	        }
-
-	        console.log('get drop');
 	    }
 
 	    function buildTemplate () {
@@ -828,8 +834,15 @@
 
 	        // Если выбрана опции 'мультивыбора' генерируем кнопку добавления
 	        if (options.multiSelect) {
+	            var $tokenAddIcon = createElem('div', ['token__add', 'token__icon']);
+
 	            self.$tokenAdd = createElem('div', [cls.tokenAdd, 'token', 'token_theme_light']);
 	            self.$tokenAdd.textContent = 'Добавить';
+
+	            // Вставляем иконку
+	            self.$tokenAdd.appendChild($tokenAddIcon);
+
+	            // Добавляем кнопку к __tokens
 	            self.$tokens.appendChild(self.$tokenAdd);
 	        }
 
@@ -868,21 +881,37 @@
 	        } else {
 	            // Генерируем список
 	            items.forEach(function (item) {
+
+	                // Если поле hide === true – не вставляем элемент в список
 	                if (item.hide) return;
 
-	                var $item = createElem('div', cls.item),
+	                var $item = createElem('div', [cls.item, 'clearfix']),
+	                    $info = createElem('div', cls.itemInfo),
 	                    $title = createElem('div', cls.itemTitle),
-	                    $info = createElem('div', cls.itemInfo);
+	                    $addition = createElem('div', cls.itemAddition);
 
 	                // Вставляем текст для составных частей
 	                setText($title, item.title);
-	                setText($info, item.info);
+	                setText($addition, item.addition);
 
-	                // Добавляем data атрибут с id
+	                // Настраиваем картинки
+	                if (self.options.showImage) {
+	                    var $imageWrap = createElem('div', cls.itemImageWrap),
+	                        $image = createElem('img', cls.itemImage);
+
+	                    $image.src = item.image;
+	                    $image.setAttribute('width', '32');
+	                    $image.setAttribute('height', '32');
+	                    $imageWrap.appendChild($image);
+	                    $item.appendChild($imageWrap);
+	                }
+
+	                // Добавляем для элемента data атрибут с id
 	                $item.setAttribute('data-dropdown-item', item.id);
 
 	                // Вставляем составные части в элемент
-	                $item.appendChild($title);
+	                $info.appendChild($title);
+	                $info.appendChild($addition);
 	                $item.appendChild($info);
 
 	                // Вставляем элемент во фрагмент
@@ -893,6 +922,16 @@
 	        // Очищаем список и Вставляем элементы
 	        self.$list.innerHTML = '';
 	        self.$list.appendChild(fragment);
+	    }
+
+	    function resetList () {
+	        self.options.items.forEach(function (item) {
+	            if (item.hide) {
+	                item.hide = false;
+	            }
+	        });
+
+	        self.selectedItems = [];
 	    }
 
 	    function createElem (tag, cls) {
@@ -921,7 +960,7 @@
 
 	            if (classList.has($dropdown, cls.open)) {
 	                if (classList.has(target, cls.root) || !$dropdown.contains(target)) {
-	                    classList.remove($dropdown, cls.open);
+	                    close(e);
 	                }
 	            }
 	        });
@@ -1032,29 +1071,7 @@
 	        while (target !== this) {
 	            if (classList.has(target, self.cls.item)) {
 	                // Нашли элемент списка, готовим его к вставке __tokens
-	                var targetId = target.getAttribute('data-dropdown-item'),
-	                    targetItem,
-	                    items = self.options.items;
-
-	                /*
-	                    Перебираем элементы и если id совпадает c data-id элемента по которому кликнули –
-	                    сохраняем элемент в переменную и ставим ему hide:true, чтобы скрыть из списка,
-	                    так как он уже выбран
-	                */
-	                items.forEach(function (item) {
-	                    if (item.id === +targetId) {
-	                        targetItem = item;
-	                        item.hide = true;
-	                    }
-	                });
-
-	                // Обновляем список, чтоб в нем уже не было выбранных элементов
-	                fillList(items);
-
-	                // Добавляем токен
-	                if (targetItem) {
-	                    addToken(targetItem);
-	                }
+	                addToken(e, target);
 
 	                // Выходим из цикла
 	                return;
@@ -1069,11 +1086,63 @@
 	            target = event.target || event.srcElement;
 
 	        if (classList.has(target, self.cls.tokenDelete)) {
-	            removeToken(target);
+	            removeToken(e, target);
 	        }
 	    }
 
-	    function addToken (item) {
+	    function addToken (e, target) {
+	        var targetId = target.getAttribute('data-dropdown-item'),
+	            targetItem,
+	            options = self.options,
+	            items = options.items;
+
+	        /*
+	            Если не выбрана опция мультиселекта:
+	            1. Делаем все элементы списка видимыми
+	            2. Очищаем __tokens перед вставкой
+	        */
+	        if (!options.multiSelect) {
+	            resetList();
+	            self.$tokens.innerHTML = '';
+	        }
+
+	        /*
+	         Перебираем элементы и если id совпадает c data-id элемента по которому кликнули –
+	         сохраняем элемент в переменную и ставим ему hide:true, чтобы скрыть из списка,
+	         так как он уже выбран
+	         */
+	        items.forEach(function (item) {
+	            if (item.id === +targetId) {
+	                targetItem = item;
+	                item.hide = true;
+	                self.selectedItems.push(item.id);
+	            }
+	        });
+
+	        // Обновляем список, чтоб в нем уже не было выбранных элементов
+	        fillList(items);
+
+	        // Добавляем токен
+	        if (targetItem) {
+	            buildToken(targetItem);
+
+	            /*
+	                Если уже добавлен хотя бы один токен
+	                и выбрана опция мультиселекта – показываем кнопку добавить
+	            */
+	            if (options.multiSelect && self.selectedItems.length >= 1) {
+	                classList.add(self.$tokenAdd, self.cls.tokenAddShow);
+	            }
+
+	            // Закрываем дропдаун
+	            close(e);
+
+	            // Вызываем обработчик на выбор элемента
+	            options.onSelect && options.onSelect.call(null, targetItem);
+	        }
+	    }
+
+	    function buildToken (item) {
 	        var cls = self.cls,
 	            $token = createElem('div', [cls.token, 'token', 'token_theme_dark']),
 	            $tokenDelete = createElem('div', [cls.tokenDelete, 'token__delete', 'token__icon']);
@@ -1081,22 +1150,34 @@
 	        setText($token, item.title);
 	        $token.appendChild($tokenDelete);
 	        $token.setAttribute('data-dropdown-token', item.id);
-	        self.$tokens.appendChild($token);
-	        classList.remove(self.$dropdown, cls.open);
+
+	        // Вставляем токен перед кнопкой 'Добавить'
+	        self.$tokens.insertAdjacentElement('afterBegin', $token);
 	    }
 
-	    function removeToken (target) {
+	    function removeToken (e, target) {
 	        var $token = target.parentNode,
 	            tokenId = $token.getAttribute('data-dropdown-token'),
-	            items = self.options.items;
+	            items = self.options.items,
+	            selectedItems = self.selectedItems;
 
 	        items.forEach(function (item) {
 	            if (item.id === +tokenId) {
 	                item.hide = false;
+
+	                selectedItems.splice(selectedItems.indexOf(item.id), 1);
 	            }
 	        });
 
 	        $token.parentNode.removeChild($token);
+
+	        /*
+	         Если уже добавлен хотя бы один токен
+	         и выбрана опция мультиселекта – показываем кнопку добавить
+	         */
+	        if (options.multiSelect && !self.selectedItems.length) {
+	            classList.remove(self.$tokenAdd, self.cls.tokenAddShow);
+	        }
 
 	        // Обновляем список, добавляем удаленный элементы
 	        fillList(items);
@@ -1138,12 +1219,17 @@
 
 
 /***/ },
-/* 7 */,
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Вставляем css для страницы
-	__webpack_require__(9);
+	__webpack_require__(7);
 
 	var events = __webpack_require__(3),
 	    polyfills = __webpack_require__(4);
@@ -1154,14 +1240,59 @@
 
 	    var dropdown = new Dropdown({
 	        id: 'first',
-	        userAvatar: true,
-	        //multiSelect: true,
+	        showImage: true,
+	        multiSelect: false,
+	        onOpen: function () {
+	            // обработчик на открытие дропдауна
+	        },
+	        onClose: function () {
+	            // обработчик на закрытие дропдауна
+	        },
+	        onSelect: function (item) {
+	            // обработчик на выбор элемента
+	        },
 	        items: [
-	            { id: 1, title: 'Андрей Рогозов', info: 'rogozov' },
-	            { id: 2, title: 'Николай Ильченко', info: 'tavriaforever' },
-	            { id: 3, title: 'Татьяна Неземная', info: 'nezemnaya' },
-	            { id: 4, title: 'Сергей Жиленков', info: 'zila' },
-	            { id: 5, title: 'Борис Сапак', info: 'baklan' }
+	            { id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/temp/rogozov.jpg' },
+	            { id: 2, title: 'Николай Ильченко', addition: 'tavriaforever', image: 'images/temp/tavriaforever.jpg' },
+	            { id: 3, title: 'Татьяна Неземная', addition: 'ЕУФИМБ (КФ) \'14', image: 'images/temp/nezemnaya.jpg' },
+	            { id: 4, title: 'Сергей Жиленков', addition: 'zila', image: 'images/temp/zila.jpg' },
+	            { id: 5, title: 'Борис Сапак', addition: 'ЮФ НУБиП Украины "КАТУ" (бывш. ЮФ НАУ)', image: 'images/temp/baklan.jpg' },
+	            { id: 6, title: 'Дарья Обер', addition: 'dasha', image: 'images/temp/dasha.jpg' },
+	            { id: 7, title: 'Антон Кибало', addition: 'kibalych', image: 'images/temp/kibalych.jpg' },
+	            { id: 8, title: 'Анастасия Жиленкова', addition: 'malaya', image: 'images/temp/malaya.jpg' },
+	            { id: 9, title: 'Ольга Зайцева', addition: 'olya', image: 'images/temp/olya.jpg' },
+	            { id: 10, title: 'Вячеслав Сапак', addition: 'slavon', image: 'images/temp/slavon.jpg' },
+	            { id: 11, title: 'Яна Набиулина', addition: 'yana', image: 'images/temp/yana.jpg' },
+	            { id: 12, title: 'Константин Зибен', addition: 'НУК им. Макарова (бывш. УГМТУ) (ХФ) \'16', image: 'images/temp/zib.jpg' }
+	        ]
+	    });
+
+	    var dropdown2 = new Dropdown({
+	        id: 'second',
+	        showImage: true,
+	        multiSelect: true,
+	        onOpen: function () {
+	            // обработчик на открытие дропдауна
+	        },
+	        onClose: function () {
+	            // обработчик на закрытие дропдауна
+	        },
+	        onSelect: function (item) {
+	            // обработчик на выбор элемента
+	        },
+	        items: [
+	            { id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/temp/rogozov.jpg' },
+	            { id: 2, title: 'Николай Ильченко', addition: 'tavriaforever', image: 'images/temp/tavriaforever.jpg' },
+	            { id: 3, title: 'Татьяна Неземная', addition: 'ЕУФИМБ (КФ) \'14', image: 'images/temp/nezemnaya.jpg' },
+	            { id: 4, title: 'Сергей Жиленков', addition: 'zila', image: 'images/temp/zila.jpg' },
+	            { id: 5, title: 'Борис Сапак', addition: 'ЮФ НУБиП Украины "КАТУ" (бывш. ЮФ НАУ)', image: 'images/temp/baklan.jpg' },
+	            { id: 6, title: 'Дарья Обер', addition: 'dasha', image: 'images/temp/dasha.jpg' },
+	            { id: 7, title: 'Антон Кибало', addition: 'kibalych', image: 'images/temp/kibalych.jpg' },
+	            { id: 8, title: 'Анастасия Жиленкова', addition: 'malaya', image: 'images/temp/malaya.jpg' },
+	            { id: 9, title: 'Ольга Зайцева', addition: 'olya', image: 'images/temp/olya.jpg' },
+	            { id: 10, title: 'Вячеслав Сапак', addition: 'slavon', image: 'images/temp/slavon.jpg' },
+	            { id: 11, title: 'Яна Набиулина', addition: 'yana', image: 'images/temp/yana.jpg' },
+	            { id: 12, title: 'Константин Зибен', addition: 'НУК им. Макарова (бывш. УГМТУ) (ХФ) \'16', image: 'images/temp/zib.jpg' }
 	        ]
 	    });
 	});
@@ -1169,13 +1300,6 @@
 
 /***/ },
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 10 */,
-/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1203,7 +1327,7 @@
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {
@@ -1260,7 +1384,7 @@
 
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {

@@ -102,21 +102,25 @@ $dropdown-ui-border-color = #c0cad5
         white-space: normal
 
     &__item-info
+        display: table-cell
+        vertical-align: middle
+
+    &__item-addition
         color: $color-grey
         padding-top: 2px
         overflow: hidden
         white-space: nowrap
         text-overflow: ellipsis
 
-    &__image-item
-        white-space: normal
-        display: inline-block
-        vertical-align: top
-        overflow: hidden
-        margin-right: 5px
+    &__item-image-wrap
+        display: table-cell
+        width: 32px
+        vertical-align: middle
+        padding-right: 10px
 
-    &__image
+    &__item-image
         border-radius: $radius
+        vertical-align: middle
 
     // Когда dropdown открыт
     &_open

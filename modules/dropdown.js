@@ -14,6 +14,10 @@ function Dropdown (options) {
         throw new Error('dropdown-ui: В опциях не указан id');
     }
 
+    // Здесь будут хранится id выбранных элементов
+    self.selectedItems = [];
+
+    // Дефайним css классы для возможной смены верстки
     this.cls = {
         root: 'dropdown-ui',
         open: 'dropdown-ui_open',
@@ -25,12 +29,16 @@ function Dropdown (options) {
         token: 'dropdown-ui__token',
         tokenDelete: 'dropdown-ui__token-delete',
         tokenAdd: 'dropdown-ui__token-add',
+        tokenAddShow: 'dropdown-ui__token-add_show',
         popup: 'dropdown-ui__popup',
         list: 'dropdown-ui__list',
         item: 'dropdown-ui__item',
         itemError: 'dropdown-ui__item_error',
+        itemInfo: 'dropdown-ui__item-info',
         itemTitle: 'dropdown-ui__item-title',
-        itemInfo: 'dropdown-ui__item-info'
+        itemAddition: 'dropdown-ui__item-addition',
+        itemImageWrap: 'dropdown-ui__item-image-wrap',
+        itemImage: 'dropdown-ui__item-image'
     };
 
     // 1. Получаем html элемент дропдауна
@@ -53,8 +61,6 @@ function Dropdown (options) {
         } else {
             self.$dropdown = self.$dropdown[0];
         }
-
-        console.log('get drop');
     }
 
     function buildTemplate () {
@@ -75,8 +81,15 @@ function Dropdown (options) {
 
         // Если выбрана опции 'мультивыбора' генерируем кнопку добавления
         if (options.multiSelect) {
+            var $tokenAddIcon = createElem('div', ['token__add', 'token__icon']);
+
             self.$tokenAdd = createElem('div', [cls.tokenAdd, 'token', 'token_theme_light']);
             self.$tokenAdd.textContent = 'Добавить';
+
+            // Вставляем иконку
+            self.$tokenAdd.appendChild($tokenAddIcon);
+
+            // Добавляем кнопку к __tokens
             self.$tokens.appendChild(self.$tokenAdd);
         }
 
@@ -115,21 +128,37 @@ function Dropdown (options) {
         } else {
             // Генерируем список
             items.forEach(function (item) {
+
+                // Если поле hide === true – не вставляем элемент в список
                 if (item.hide) return;
 
-                var $item = createElem('div', cls.item),
+                var $item = createElem('div', [cls.item, 'clearfix']),
+                    $info = createElem('div', cls.itemInfo),
                     $title = createElem('div', cls.itemTitle),
-                    $info = createElem('div', cls.itemInfo);
+                    $addition = createElem('div', cls.itemAddition);
 
                 // Вставляем текст для составных частей
                 setText($title, item.title);
-                setText($info, item.info);
+                setText($addition, item.addition);
 
-                // Добавляем data атрибут с id
+                // Настраиваем картинки
+                if (self.options.showImage) {
+                    var $imageWrap = createElem('div', cls.itemImageWrap),
+                        $image = createElem('img', cls.itemImage);
+
+                    $image.src = item.image;
+                    $image.setAttribute('width', '32');
+                    $image.setAttribute('height', '32');
+                    $imageWrap.appendChild($image);
+                    $item.appendChild($imageWrap);
+                }
+
+                // Добавляем для элемента data атрибут с id
                 $item.setAttribute('data-dropdown-item', item.id);
 
                 // Вставляем составные части в элемент
-                $item.appendChild($title);
+                $info.appendChild($title);
+                $info.appendChild($addition);
                 $item.appendChild($info);
 
                 // Вставляем элемент во фрагмент
@@ -140,6 +169,16 @@ function Dropdown (options) {
         // Очищаем список и Вставляем элементы
         self.$list.innerHTML = '';
         self.$list.appendChild(fragment);
+    }
+
+    function resetList () {
+        self.options.items.forEach(function (item) {
+            if (item.hide) {
+                item.hide = false;
+            }
+        });
+
+        self.selectedItems = [];
     }
 
     function createElem (tag, cls) {
@@ -168,7 +207,7 @@ function Dropdown (options) {
 
             if (classList.has($dropdown, cls.open)) {
                 if (classList.has(target, cls.root) || !$dropdown.contains(target)) {
-                    classList.remove($dropdown, cls.open);
+                    close(e);
                 }
             }
         });
@@ -279,29 +318,7 @@ function Dropdown (options) {
         while (target !== this) {
             if (classList.has(target, self.cls.item)) {
                 // Нашли элемент списка, готовим его к вставке __tokens
-                var targetId = target.getAttribute('data-dropdown-item'),
-                    targetItem,
-                    items = self.options.items;
-
-                /*
-                    Перебираем элементы и если id совпадает c data-id элемента по которому кликнули –
-                    сохраняем элемент в переменную и ставим ему hide:true, чтобы скрыть из списка,
-                    так как он уже выбран
-                */
-                items.forEach(function (item) {
-                    if (item.id === +targetId) {
-                        targetItem = item;
-                        item.hide = true;
-                    }
-                });
-
-                // Обновляем список, чтоб в нем уже не было выбранных элементов
-                fillList(items);
-
-                // Добавляем токен
-                if (targetItem) {
-                    addToken(targetItem);
-                }
+                addToken(e, target);
 
                 // Выходим из цикла
                 return;
@@ -316,11 +333,63 @@ function Dropdown (options) {
             target = event.target || event.srcElement;
 
         if (classList.has(target, self.cls.tokenDelete)) {
-            removeToken(target);
+            removeToken(e, target);
         }
     }
 
-    function addToken (item) {
+    function addToken (e, target) {
+        var targetId = target.getAttribute('data-dropdown-item'),
+            targetItem,
+            options = self.options,
+            items = options.items;
+
+        /*
+            Если не выбрана опция мультиселекта:
+            1. Делаем все элементы списка видимыми
+            2. Очищаем __tokens перед вставкой
+        */
+        if (!options.multiSelect) {
+            resetList();
+            self.$tokens.innerHTML = '';
+        }
+
+        /*
+         Перебираем элементы и если id совпадает c data-id элемента по которому кликнули –
+         сохраняем элемент в переменную и ставим ему hide:true, чтобы скрыть из списка,
+         так как он уже выбран
+         */
+        items.forEach(function (item) {
+            if (item.id === +targetId) {
+                targetItem = item;
+                item.hide = true;
+                self.selectedItems.push(item.id);
+            }
+        });
+
+        // Обновляем список, чтоб в нем уже не было выбранных элементов
+        fillList(items);
+
+        // Добавляем токен
+        if (targetItem) {
+            buildToken(targetItem);
+
+            /*
+                Если уже добавлен хотя бы один токен
+                и выбрана опция мультиселекта – показываем кнопку добавить
+            */
+            if (options.multiSelect && self.selectedItems.length >= 1) {
+                classList.add(self.$tokenAdd, self.cls.tokenAddShow);
+            }
+
+            // Закрываем дропдаун
+            close(e);
+
+            // Вызываем обработчик на выбор элемента
+            options.onSelect && options.onSelect.call(null, targetItem);
+        }
+    }
+
+    function buildToken (item) {
         var cls = self.cls,
             $token = createElem('div', [cls.token, 'token', 'token_theme_dark']),
             $tokenDelete = createElem('div', [cls.tokenDelete, 'token__delete', 'token__icon']);
@@ -328,22 +397,34 @@ function Dropdown (options) {
         setText($token, item.title);
         $token.appendChild($tokenDelete);
         $token.setAttribute('data-dropdown-token', item.id);
-        self.$tokens.appendChild($token);
-        classList.remove(self.$dropdown, cls.open);
+
+        // Вставляем токен перед кнопкой 'Добавить'
+        self.$tokens.insertAdjacentElement('afterBegin', $token);
     }
 
-    function removeToken (target) {
+    function removeToken (e, target) {
         var $token = target.parentNode,
             tokenId = $token.getAttribute('data-dropdown-token'),
-            items = self.options.items;
+            items = self.options.items,
+            selectedItems = self.selectedItems;
 
         items.forEach(function (item) {
             if (item.id === +tokenId) {
                 item.hide = false;
+
+                selectedItems.splice(selectedItems.indexOf(item.id), 1);
             }
         });
 
         $token.parentNode.removeChild($token);
+
+        /*
+         Если уже добавлен хотя бы один токен
+         и выбрана опция мультиселекта – показываем кнопку добавить
+         */
+        if (options.multiSelect && !self.selectedItems.length) {
+            classList.remove(self.$tokenAdd, self.cls.tokenAddShow);
+        }
 
         // Обновляем список, добавляем удаленный элементы
         fillList(items);
