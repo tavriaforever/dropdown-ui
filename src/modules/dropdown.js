@@ -3,7 +3,8 @@ var helpers = require('./helpers'),
     setText = helpers.setText,
     events = require('./events'),
     classList = require('./classList'),
-    text = require('./text');
+    text = require('./text-transform'),
+    polyfills = require('./polyfills');
 
 function Dropdown (options) {
     var self = this;

@@ -2,7 +2,7 @@
   "name": "dropdown-ui",
   "version": "0.1.0",
   "description": "Dropdown-ui in vk.com styles. Written with help Vanilla JS framework – http://vanilla-js.com",
-  "main": "webpack.config.js",
+  "main": "index.node.js",
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/tavriaforever/dropdown-ui.git"
   },
-  "author": "",
+  "author": "Nickolay Ilchenko tavriaforever@yandex.ru",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/tavriaforever/dropdown-ui/issues"

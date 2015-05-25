@@ -36,7 +36,7 @@ module.exports = {
             elem.detachEvent('on' + type, handler);
     },
 
-    ready: function (handler) {
+    domReady: function (handler) {
         return isSupportModernEvent ?
             document.addEventListener('DOMContentLoaded', handler, false) :
                 document.attachEvent('onreadystatechange', handler);
