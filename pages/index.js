@@ -41,6 +41,8 @@ events.ready(function () {
         id: 'second',
         showImage: true,
         multiSelect: true,
+        inputName: 'user-value-name',
+        inputId: 'user-value-id',
         onOpen: function () {
             // обработчик на открытие дропдауна
         },

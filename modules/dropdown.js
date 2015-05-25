@@ -71,6 +71,7 @@ function Dropdown (options) {
         self.$control = createElem('div', [cls.control, 'clearfix']);
         self.$arrow = createElem('i', cls.arrow);
         self.$input = createElem('input', [cls.input, cls.controlItem]);
+        self.$inputHidden = createElem('input');
         self.$tokens = createElem('div', [cls.tokens, cls.controlItem, 'clearfix']);
         self.$popup = createElem('div', cls.popup);
         self.$list = createElem('div', cls.list);
@@ -78,6 +79,13 @@ function Dropdown (options) {
         // Настраиваем input
         self.$input.setAttribute('type', 'text');
         self.$input.setAttribute('placeholder', 'Введите имя друга или email');
+
+        // Настраиваем скрытый input хранения данных для отправки формы
+        self.$inputHidden.setAttribute('type', 'hidden');
+        self.$inputHidden.setAttribute('name', options.inputName || 'dropdown');
+            // Если передан id для инпута – добавлен его
+            options.inputId && self.$inputHidden.setAttribute('id', options.inputId);
+
 
         // Если выбрана опции 'мультивыбора' генерируем кнопку добавления
         if (options.multiSelect) {
@@ -108,6 +116,7 @@ function Dropdown (options) {
         }
         fillList(items);
 
+        fragment.appendChild(self.$inputHidden);
         fragment.appendChild(self.$control);
         fragment.appendChild(self.$popup);
 
@@ -181,15 +190,23 @@ function Dropdown (options) {
         self.selectedItems = [];
     }
 
+    /**
+     *
+     * @param tag
+     * @param [cls]
+     * @returns {Element}
+     */
     function createElem (tag, cls) {
         var elem = document.createElement(tag);
 
-        if (Array.isArray(cls)) {
-            cls.forEach(function (classItem) {
-                classList.add(elem, classItem)
-            });
-        } else {
-            classList.add(elem, cls);
+        if (cls) {
+            if (Array.isArray(cls)) {
+                cls.forEach(function (classItem) {
+                    classList.add(elem, classItem)
+                });
+            } else {
+                classList.add(elem, cls);
+            }
         }
 
         return elem;
@@ -384,6 +401,9 @@ function Dropdown (options) {
                 classList.add(self.$tokenAdd, self.cls.tokenAddShow);
             }
 
+            // Заполняем input для отправки формы
+            self.$inputHidden.value = self.selectedItems.join(',');
+
             // Закрываем дропдаун
             close(e);
 
@@ -428,6 +448,9 @@ function Dropdown (options) {
         if (options.multiSelect && !self.selectedItems.length) {
             classList.remove(self.$tokenAdd, self.cls.tokenAddShow);
         }
+
+        // Убираем значени удаленного элемента из скрытого инпута для формы
+        self.$inputHidden.value = self.selectedItems.join(',');
 
         // Обновляем список, добавляем удаленный элементы
         fillList(items);
