@@ -54,7 +54,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "e039c7178d3e31deb252"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d0152402884f4fb3b2d8"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/ 	
@@ -824,7 +824,7 @@
 	        self.$control = createElem('div', [cls.control, 'clearfix']);
 	        self.$arrow = createElem('i', cls.arrow);
 	        self.$input = createElem('input', [cls.input, cls.controlItem]);
-	        self.$tokens = createElem('div', [cls.tokens, cls.controlItem]);
+	        self.$tokens = createElem('div', [cls.tokens, cls.controlItem, 'clearfix']);
 	        self.$popup = createElem('div', cls.popup);
 	        self.$list = createElem('div', cls.list);
 
@@ -951,6 +951,9 @@
 	    function listenEvents () {
 	        // Focus в инпуте – открываем дропдаун
 	        events.addEvent(self.$input, 'focus', open);
+
+	        // Если выбрана опция мультиселекта и есть кнопка 'Добавить' - клик по ней открывает дропдаун
+	        self.$tokenAdd && events.addEvent(self.$tokenAdd, 'click', open);
 
 	        // Закрываем dropdown по клику вне блока
 	        events.addEvent(document, 'click', function (e) {

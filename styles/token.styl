@@ -20,17 +20,17 @@
         transition: opacity 200ms linear
         opacity: .7
 
-        &:hover
-        {
-            opacity: 1
-        }
-
     &__delete
         cursor: pointer
         background: url('../images/token__delete.png') no-repeat 50%;
 
     &__add
         background: url('../images/token__add.png') no-repeat 50%;
+
+    &:hover
+        .token__icon
+            opacity: 1
+
 
 .token_theme_dark
     background-color: #597da3

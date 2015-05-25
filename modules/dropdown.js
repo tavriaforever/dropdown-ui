@@ -71,7 +71,7 @@ function Dropdown (options) {
         self.$control = createElem('div', [cls.control, 'clearfix']);
         self.$arrow = createElem('i', cls.arrow);
         self.$input = createElem('input', [cls.input, cls.controlItem]);
-        self.$tokens = createElem('div', [cls.tokens, cls.controlItem]);
+        self.$tokens = createElem('div', [cls.tokens, cls.controlItem, 'clearfix']);
         self.$popup = createElem('div', cls.popup);
         self.$list = createElem('div', cls.list);
 
@@ -198,6 +198,9 @@ function Dropdown (options) {
     function listenEvents () {
         // Focus в инпуте – открываем дропдаун
         events.addEvent(self.$input, 'focus', open);
+
+        // Если выбрана опция мультиселекта и есть кнопка 'Добавить' - клик по ней открывает дропдаун
+        self.$tokenAdd && events.addEvent(self.$tokenAdd, 'click', open);
 
         // Закрываем dropdown по клику вне блока
         events.addEvent(document, 'click', function (e) {
