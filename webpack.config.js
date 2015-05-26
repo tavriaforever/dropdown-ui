@@ -7,7 +7,8 @@ module.exports = {
         example: ['webpack/hot/dev-server', './example/example.js']
     },
     output: {
-        path: './example/bundle',
+        path: path.resolve(__dirname, 'example', 'bundle'),
+        publicPath: 'http://localhost:3000/bundle/',
         filename: '[name].bundle.js'
     },
     plugins: [
@@ -25,11 +26,5 @@ module.exports = {
     },
     resolve: {
         modulesDirectories: ['node_modules', 'src']
-    },
-    devServer: {
-        host: 'localhost',
-        post: 8080,
-        contentBase: './',
-        colors: true
     }
 };

@@ -2,11 +2,10 @@
 @import 'token.styl'
 @import 'clearfix.styl'
 
-$dropdown-ui = '.dropdown-ui'
 $dropdown-ui-bg-color = white
 $dropdown-ui-border-color = #c0cad5
 
-{$dropdown-ui}
+.dropdown-ui
     background: $dropdown-ui-bg-color
     border: 1px solid $dropdown-ui-border-color
     padding: 2px
@@ -58,10 +57,10 @@ $dropdown-ui-border-color = #c0cad5
         font-family: $font
 
         &:focus
-            color: black;
+            color: black
 
     &__popup
-        display: none;
+        display: none
         margin-top: 1px
         background: $dropdown-ui-bg-color
         top: 100%
@@ -124,6 +123,6 @@ $dropdown-ui-border-color = #c0cad5
 
     // Когда dropdown открыт
     &_open
-        {$dropdown-ui}
+        .dropdown-ui
             &__popup
                 display: block
