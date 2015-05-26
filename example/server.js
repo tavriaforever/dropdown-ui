@@ -30,7 +30,7 @@ app.get('/', function (req, res) {
 
 app.post('/api/users', function (req, res) {
     console.log('req.body', req.body);
-    res.json({ result: 'hello from server'});
+    return res.json({ result: 'hello from server'}).end();
 });
 
 app.use(function(err, req, res, next) {
@@ -40,5 +40,5 @@ app.use(function(err, req, res, next) {
 
 // Start app
 app.listen('3001', function () {
-    console.log('Dropdown example running, visit http://localhost:3000');
+    console.log('Dropdown example running, visit http://localhost:3001');
 });

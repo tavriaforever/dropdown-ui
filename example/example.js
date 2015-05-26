@@ -1,8 +1,11 @@
 // Вставляем css для страницы
 require('./example.styl');
+require('../src/modules/polyfills');
 
 // Модуля для кроссбраузерной работы событий
 var events = require('../src/modules/events'),
+    Ajax = require('../src/modules/ajax'),
+    sendAjaxRequest = new Ajax(),
     data = [
         { id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/rogozov.jpg' },
         { id: 2, title: 'Николай Ильченко', addition: 'tavriaforever', image: 'images/tavriaforever.jpg' },
@@ -71,5 +74,18 @@ events.domReady(function () {
             // обработчик на выбор элемента
         },
         items: data
+    });
+
+    sendAjaxRequest({
+        method: 'POST',
+        url: '/api/users',
+        type: 'json',
+        data: { text: 'Mega text' }
+    }, function (err, result) {
+        if (err) {
+            return console.log('err', err);
+        }
+
+        console.log('result', result);
     });
 });
