@@ -3,8 +3,9 @@ var helpers = require('./helpers'),
     setText = helpers.setText,
     events = require('./events'),
     classList = require('./classList'),
-    text = require('./text-transform'),
-    polyfills = require('./polyfills');
+    polyfills = require('./polyfills'),
+    smartFilter = require('./smartFilter'),
+    Ajax = require('./ajax');
 
 function Dropdown (options) {
     var self = this;
@@ -13,6 +14,10 @@ function Dropdown (options) {
 
     if (!this.options.id) {
         throw new Error('dropdown-ui: В опциях не указан id');
+    }
+
+    if (this.options.server) {
+        var sendAjaxRequest = new Ajax();
     }
 
     // Здесь будут хранится id выбранных элементов
@@ -217,6 +222,9 @@ function Dropdown (options) {
         // Focus в инпуте – открываем дропдаун
         events.addEvent(self.$input, 'focus', open);
 
+        // Blur в инпуте – закрываем дропдаун
+        //events.addEvent(self.$input, 'blur', close);
+
         // Если выбрана опция мультиселекта и есть кнопка 'Добавить' - клик по ней открывает дропдаун
         self.$tokenAdd && events.addEvent(self.$tokenAdd, 'click', open);
 
@@ -286,42 +294,44 @@ function Dropdown (options) {
     function onKeyUp (e) {
         var target = e.target || e.srcElement,
             value = target.value,
-            items = self.options.items,
-            filtered = [];
+            options = self.options,
+            items = options.items,
+            server = options.server,
 
-        // 1. Фильтруем в обычном порядке, предпологая, что пользователь ввел текст правильно рого
-        filtered = filter(items, value);
+            // 1. Сначало фильтруем данные по полю title (содержит имя/фамилию пользователя)
+            filtered = smartFilter.get(items, value, { name: 'title', lang: 'ru' });
 
-        // 2. Если не нашли – фильтруем на случай ввода транслита rogo -> рого
-        if (!filtered.length) {
-            filtered = filter(items, text.translit('en', 'ru', value));
+        // 2a. Отправляем запрос на сервер если ничего не нашли
+        // и переданы опции для запроса
+        if (!filtered.length && server) {
+            // Добавляем в отправляемую дату текущее значение value
+            server.data.value = value;
+
+            // Делаем запрос на сервер
+            sendAjaxRequest({
+                method: server.method,
+                url: server.url,
+                type: server.type,
+                data: server.data
+            }, function (err, result) {
+                if (err) {
+                    console.log('err', err);
+                    throw new Error('dropdown-ui: Ошибка сервера: ', err.message || err.statusText);
+                }
+
+                console.log('result', result);
+
+                setFilterResults(result.items);
+            });
+
+        } else {
+            // 2б. Если опций для сервера передано не было завершаем фильтрацию данных
+            setFilterResults(filtered);
         }
+    }
 
-        // 3. Если не нашли – Фильтруем на случай ввода hjuj -> рого
-        if (!filtered.length) {
-            filtered = filter(items, text.replace('en', 'ru', value));
-        }
-
-        // 4. Если не нашли – Фильтруем на случай ввода кщпщ -> rogo
-        if (!filtered.length) {
-            // кщпщ -> rogo
-            var newValue = text.replace('ru', 'en', value);
-            // rogo -> рого
-            newValue = text.translit('en', 'ru', newValue);
-            filtered = filter(items, newValue);
-        }
-
-        function filter (items, searchValue) {
-            return items.filter(function (item) {
-                var title = item.title;
-
-                title = title.toLowerCase();
-                searchValue = searchValue.toLowerCase();
-
-                return title.indexOf(searchValue) !== -1;
-            })
-        }
-
+    function setFilterResults (filtered) {
+        // Если ничего так и не нашли возвращаем ошибку
         if (!filtered.length) {
             filtered.push({ errorMessage: 'Пользователь не найден' });
         }

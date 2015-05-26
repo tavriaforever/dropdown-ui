@@ -79,6 +79,8 @@ module.exports = function Ajax () {
                 xhr.setRequestHeader(h, reqHeaders[h]);
             }
         }
+
+        return reqHeaders;
     }
 
     /**
@@ -94,9 +96,7 @@ module.exports = function Ajax () {
             statusText: xhr.statusText
         };
 
-        cb(null, result);
-
-        console.log('xhr', xhr);
+        return cb(null, result);
     }
 
     /**
@@ -111,9 +111,7 @@ module.exports = function Ajax () {
             statusText: xhr.statusText
         };
 
-        cb(error);
-
-        console.log('xhr error', xhr);
+        return cb(error);
     }
 
     /**
@@ -134,9 +132,7 @@ module.exports = function Ajax () {
 
         var method = options.method || 'GET',
             url = options.url || window.location.toString(),
-            data = options.data,
-            timeout = options.timeout,
-            timeoutTimer;
+            data = options.data
 
         // 1. Всегда открываем ассинхронное соединение
         xhr.open(method, url, true);
@@ -158,6 +154,8 @@ module.exports = function Ajax () {
 
         // 4. Финал: Отправляем запрос
         xhr.send(data);
+
+        return xhr;
     }
 };
 

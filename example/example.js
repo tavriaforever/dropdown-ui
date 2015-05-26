@@ -29,6 +29,12 @@ events.domReady(function () {
         id: 'first',
         showImage: true,
         multiSelect: false,
+        server: {
+            method: 'POST',
+            url: '/api/users',
+            type: 'json',
+            data: { field: { name: 'domain', lang: 'en' } }
+        },
         onOpen: function () {
             // обработчик на открытие дропдауна
         },
@@ -74,18 +80,5 @@ events.domReady(function () {
             // обработчик на выбор элемента
         },
         items: data
-    });
-
-    sendAjaxRequest({
-        method: 'POST',
-        url: '/api/users',
-        type: 'json',
-        data: { text: 'Mega text' }
-    }, function (err, result) {
-        if (err) {
-            return console.log('err', err);
-        }
-
-        console.log('result', result);
     });
 });
