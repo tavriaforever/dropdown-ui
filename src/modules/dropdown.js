@@ -248,7 +248,7 @@ function Dropdown (options) {
         // Настраиваем input
         self.$input.setAttribute('type', 'text');
         self.$input.setAttribute('placeholder', self.placeholder);
-        self.$input.setAttribute('tabindex', self.tabIndex);
+        self.$input.setAttribute('tabindex', self.tabindex);
 
         // Настраиваем скрытый input хранения данных для отправки формы
         self.$inputHidden.setAttribute('type', 'hidden');
@@ -462,8 +462,6 @@ function Dropdown (options) {
      * @param e {Object} - event object
      */
     function onListClick (e) {
-
-        console.log('onListClick');
         var event = e || window.event,
             target = event.target || event.srcElement;
 

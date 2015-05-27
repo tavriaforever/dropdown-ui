@@ -3,11 +3,10 @@
 @import 'clearfix.styl'
 
 $dropdown-ui-bg-color = white
-$dropdown-ui-border-color = #c0cad5
 
 .dropdown-ui
     background: $dropdown-ui-bg-color
-    border: 1px solid $dropdown-ui-border-color
+    border: 1px solid $color-blue-light
     padding: 2px
     position: relative
     overflow: visible
@@ -24,7 +23,7 @@ $dropdown-ui-border-color = #c0cad5
         cursor: pointer
         position: absolute
         right: 0
-        top: 0
+        top: -4px
 
     &__control-item
         cursor: default
@@ -68,7 +67,7 @@ $dropdown-ui-border-color = #c0cad5
         width: 100%
         position: absolute
         overflow: hidden
-        border: solid $dropdown-ui-border-color
+        border: solid $color-blue-light
         border-width: 0 1px 1px
         z-index: 1000
 
