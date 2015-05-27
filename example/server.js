@@ -28,6 +28,7 @@ var path = require('path'),
 
 var compiler = webpack(webpackConfig);
 
+app.set('port', (process.env.PORT || 3001));
 app.use(serveStatic(path.join(process.cwd(), 'example')));
 app.use(serveFavicon(__dirname + '/favicon.ico'));
 app.use(webpackDevMiddleware(compiler, {
@@ -59,6 +60,6 @@ app.use(function(err, req, res, next) {
 });
 
 // Start app
-app.listen('3001', function () {
-    console.log('Dropdown example running, visit http://localhost:3001');
+app.listen(app.get('port'), function () {
+    console.log('Dropdown example running, visit http://localhost:' + app.get('port'));
 });
