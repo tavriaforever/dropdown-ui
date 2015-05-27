@@ -28,6 +28,8 @@ events.domReady(function () {
         id: 'first',
         showImage: true,
         multiSelect: false,
+        tabIndex: '1',
+        placeholder: 'Введите имя одного друга или его домен',
         server: {
             method: 'POST',
             url: '/api/users',
@@ -51,6 +53,7 @@ events.domReady(function () {
         id: 'second',
         showImage: true,
         multiSelect: true,
+        tabIndex: '2',
         inputName: 'user-value-name',
         inputId: 'user-value-id',
         onOpen: function () {
@@ -69,8 +72,7 @@ events.domReady(function () {
     var dropdown3 = new Dropdown({
         id: 'third',
         multiSelect: true,
-        inputName: 'user-value-name',
-        inputId: 'user-value-id',
+        tabIndex: '3',
         onOpen: function () {
             // обработчик на открытие дропдауна
         },

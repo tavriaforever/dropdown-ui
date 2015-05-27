@@ -11,16 +11,82 @@
 </head>
 <body class="page">
     <div class="page__example">
-        <h2>multiSelect: false</h2>
-        <div class="dropdown-ui" data-dropdown-id="first"></div>
+        <div class="page__example-text">
+            <p><strong>Dropdown-ui</strong> – компонент выпадающего списка для выбора одного или более значений c ui интерфейсом в стиле vk.com</p>
+            <p>Репозиторий с исходным кодом: <a href="//github.com/tavriaforever/dropdown-ui/" target="_blank">github.com/tavriaforever/dropdown-ui/</a></p>
+            <p>Написан на native javascript, без использования сторонних фреймворков и библиотек, кроме webpack для сборки файлов и express сервер для разработки</p>
+            <p>Поддерживает работу в современных браузерах Firefox, Yandex, Chrome Opera 12+ и IE8+</p>
+
+            <p>Реализует следующие возможности:</p>
+            <ul>
+                <li>Отображение списка пунктов с изображением и без</li>
+                <li>автокомплит для фильтрации пунктов списка с учетом транслитерации текста и не правильной раскладки клавиатуры</li>
+                <li>запрос данных на сервер для фильтрации списка</li>
+                <li>Выбор одного и более пункта сразу</li>
+                <li>Функции обратного вызова на открытие/закрытие дропдауна и выбор пункта списка</li>
+                <li>Поддержка отправки данных в форме, dropdown содержит input type="hidden" со значениями выбранных пунктов списка</li>
+            </ul>
+
+            <h3>Технические детали</h3>
+            <p>Предпологается, что проект собирается с помощью билдера <a href="//webpack.github.io" target="_blank">webpack.github.io</a>,
+                который предоставляет возможность использовать для компонента и его зависимостей – модульную систему CommonJS</p>
+            <p>Для разработки и просмотра примера используется связка node.js фреймворка <a href="//expressjs.com" target="_blank">express</a> и <a href="//github.com/webpack/webpack-dev-middleware" target="_blank">webpack-dev-middleware</a></p>
+
+            <h3>Структура проекта:</h3>
+            <ul>
+                <li><strong>example</strong> -> папки с файлами примера, используется для демонстрации и разработки</li>
+                <li>
+                    <strong>src</strong> -> исходные файлы компонента
+                    <ul>
+                        <li><strong>images</strong> -> картинки для отображения элементов дропдауна</li>
+                        <li>
+                            <strong>modules</strong> -> набор модулей для работы компонента
+                            <ul>
+                                <li><strong>dropdown.js</strong> -> Основной модуль, реализующий логику ui компонента</li>
+                                <li><strong>ajax.js</strong> -> Базовый модуль для Ajax запросов на сервер</li>
+                                <li><strong>classList.js</strong> -> Модуль для кроссбраузерной работой с css классами html элементов</li>
+                                <li><strong>events.js</strong> -> Модуль для кроссбраузерной подписки на DOM события</li>
+                                <li><strong>helpers.js</strong> -> Модуль с набором хелперов для работы с DOM нодами</li>
+                                <li><strong>polyfills.js</strong> -> Минимальный набор полифилов для поддержки ECMAScript 5 методов, которые необходимы для dropdown</li>
+                                <li><strong>smartFilter.js</strong> -> Модуль для умной фильтрации массивов данных с учетом передачи некорректного запроса: транслитерация и не правильняа раскладка клавиатуры</li>
+                                <li><strong>textTransfrom.js</strong> -> Модуль для трансформации текста при фильтрации массивов данных</li>
+                            </ul>
+                        </li>
+                        <li><strong>styles</strong> -> набор стилей, разбитых на отдельные файлы-блоки по методологии БЭМ</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Как запустить пример локально:</h3>
+            <p>1. Открываем папку example и просто локально запускаем index.html</p>
+            <p>2. Необходимо наличие установленного node.js + npm! Для того, чтобы была возможность получать результаты фильтрации с сервера
+                и пересобирать билды скриптов и стилей, необходимо с помощью bash консоли перейти в директорию проекта и выполнить поочередно команды:<br>
+                npm install<br>
+                npm start
+            </p>
+            <p>После чего вы увидите в консоле сообщение о том, что на 3001 порту запустил сервер, открываем в браузере http://localhost:3001</p>
+            <p>На каждое изменение исходных файлов webpack будет пересобирать билд и при перезагрузке страницы будет отображены наши изменения</p>
+        </div>
+        <div class="page__example-demo">
+            <h2>Вариант #1</h2>
+            <div class="dropdown-ui" data-dropdown-id="first"></div>
+        </div>
     </div>
     <div class="page__example">
-        <h2>multiSelect: true</h2>
-        <div class="dropdown-ui" data-dropdown-id="second"></div>
+        <div class="page__example-text">
+            <h2>Мультивыбор пунктов и кастомный id и name для инпута</h2>
+        </div>
+        <div class="page__example-demo">
+            <div class="dropdown-ui" data-dropdown-id="second"></div>
+        </div>
     </div>
     <div class="page__example">
-        <h2>showImage: false</h2>
-        <div class="dropdown-ui" data-dropdown-id="third"></div>
+        <div class="page__example-text">
+            <h2>Список без изображений</h2>
+        </div>
+        <div class="page__example-demo">
+            <div class="dropdown-ui" data-dropdown-id="third"></div>
+        </div>
     </div>
 </body>
 </html>

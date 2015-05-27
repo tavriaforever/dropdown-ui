@@ -97,8 +97,12 @@ function Dropdown (options) {
         var sendAjaxRequest = new Ajax();
     }
 
+    // Задаем плейсхолдер для инпута
+    this.placeholder = this.options.placeholder || 'Введите имя друга';
+    this.tabIndex = this.options.tabIndex || 0;
+
     // Здесь будут хранится id выбранных элементов
-    self.selectedItems = [];
+    this.selectedItems = [];
 
     // Дефайним css классы для возможной смены верстки
     this.cls = {
@@ -243,7 +247,8 @@ function Dropdown (options) {
 
         // Настраиваем input
         self.$input.setAttribute('type', 'text');
-        self.$input.setAttribute('placeholder', 'Введите имя друга или email');
+        self.$input.setAttribute('placeholder', self.placeholder);
+        self.$input.setAttribute('tabindex', self.tabIndex);
 
         // Настраиваем скрытый input хранения данных для отправки формы
         self.$inputHidden.setAttribute('type', 'hidden');
@@ -319,8 +324,12 @@ function Dropdown (options) {
         // Focus в инпуте – открываем дропдаун
         events.addEvent(self.$input, 'focus', open);
 
-        // Blur в инпуте – закрываем дропдаун
-        //events.addEvent(self.$input, 'blur', close);
+        // Закрытие дропдауна при клике клавиш на tab
+        events.addEvent(self.$input, 'keydown', function (e) {
+            if (e.keyCode === 9) {
+                close(e);
+            }
+        });
 
         // Если выбрана опция мультиселекта и есть кнопка 'Добавить' - клик по ней открывает дропдаун
         self.$tokenAdd && events.addEvent(self.$tokenAdd, 'click', open);
@@ -453,6 +462,8 @@ function Dropdown (options) {
      * @param e {Object} - event object
      */
     function onListClick (e) {
+
+        console.log('onListClick');
         var event = e || window.event,
             target = event.target || event.srcElement;
 
