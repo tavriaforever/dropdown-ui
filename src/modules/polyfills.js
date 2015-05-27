@@ -1,3 +1,9 @@
+/**
+ * Набор полифилов для:
+ * - кроссбраузной работы ECMAScript 5 функций
+ * - стандартизации DOM Node API в современных и устаревших браузерах
+ */
+
 // indexOf IE8-
 if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function(str /*, from*/) {
@@ -64,7 +70,7 @@ if (!Array.prototype.filter) {
     };
 }
 
-// textContent
+// Node.textContent для IE8
 if (Object.defineProperty
         && Object.getOwnPropertyDescriptor
             && Object.getOwnPropertyDescriptor(Element.prototype, 'textContent')

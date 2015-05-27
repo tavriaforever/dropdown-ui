@@ -1,3 +1,65 @@
+/**
+ * Модуль ui компонента dropdown, реализованный на Vanilla Javascript
+ * Скриншот: https://raw.githubusercontent.com/tavriaforever/dropdown-ui/master/example/example.png
+ * Реализует следующие возможности:
+ * - отображение пунктов списка с картинкой и без
+ * - автокомплит для фильтрации пунктов списка с учетом транслитерации текста
+ * и не правильной раскладки клавиатуры
+ * - запрос данных на сервер автокомплита фильтрации пунктов списка
+ * - Выбор одного пункта или multiSelect
+ * - коллбеки на открытие/закрытие дропдауна и выбор пункта списка
+ *
+ * ВАЖНО! Создает input type="hidden", который содержит id текущих выбранных пунктов для сабмита формы
+ * Браузерная поддержка: Современные браузеры firefox, yandex, chrome, opera 12.16+, IE8+
+ * Репозиторий с исходным кодом: https://github.com/tavriaforever/dropdown-ui/
+ *
+ * Пример использования:
+ * ВАЖНО! Код компонента используется модульную систему CommonJS,
+ * для работы в браузере предпологается сборка кода с помощью webpack.github.io
+ *
+ * // html
+ * <div class="dropdown-ui" data-dropdown-id="first"></div>
+ *
+ * // javascript + styles
+ * var Dropdown = require('../src/modules/dropdown.js'),
+ *     dropdownStyles = require('../src/styles/dropdown.js');
+ *
+ * var dropdown = new Dropdown({
+        id: 'first',
+        showImage: true,
+        multiSelect: true,
+        server: {
+            method: 'POST',
+            url: '/api/users',
+            type: 'json',
+            data: { field: { name: 'domain', lang: 'en' } }
+        },
+        onOpen: function () {
+            // обработчик на открытие дропдауна
+        },
+        onClose: function () {
+            // обработчик на закрытие дропдауна
+        },
+        onSelect: function (item) {
+            // обработчик на выбор элемента
+        },
+        items: [
+            { id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/rogozov.jpg' },
+            { id: 2, title: 'Николай Ильченко', addition: 'tavriaforever', image: 'images/tavriaforever.jpg' },
+            { id: 3, title: 'Татьяна Неземная', addition: 'ЕУФИМБ (КФ) \'14', image: 'images/nezemnaya.jpg' }
+        ]
+    });
+
+    // Если нужно перезаполнить список:
+    dropdown.fillList([
+         { id: 4, title: 'Сергей Жиленков', addition: 'zila', image: 'images/zila.jpg' },
+         { id: 5, title: 'Борис Сапак', addition: 'ЮФ НУБиП Украины "КАТУ" (бывш. ЮФ НАУ)', image: 'images/baklan.jpg' },
+         { id: 6, title: 'Дарья Обер', addition: 'dasha', image: 'images/dasha.jpg' }
+    ], true);
+ *
+ * @type {Class}
+ */
+
 var helpers = require('./helpers'),
     $ = helpers.$,
     setText = helpers.setText,
@@ -7,11 +69,26 @@ var helpers = require('./helpers'),
     smartFilter = require('./smartFilter'),
     Ajax = require('./ajax');
 
+/**
+ * Класс ui компонента dropdown
+ * @param options {Object}
+ * - id {String|Number} - id дропдауна, в html указывает в атрибуте data-dropdown-id="first"
+ * - showImage {Boolean} - показывать или нет изображение для пункта списка
+ * - multiSelect {Boolean} - если true, можно выбрать более одного пункта
+ * - server {Object} - опции для запроса данные с сервера
+ * - onOpen {Function} - обработчик на открытие дропдауна
+ * - onClose {Function} - обработчик на закрытие дропдауна
+ * - onSelect {Function} - обработчик на выбор пункта списка, в аргумент передается объект выбранного пункта
+ * - items {Array} - массив пунктов списка, содержит поля title(например имя пользователя),
+ * addition(доп информация) и image(путь до картинки пункта, например аватар пользователя)
+ * @constructor
+ */
 function Dropdown (options) {
     var self = this;
 
     this.options = options || {};
 
+    // id обязательное поле опций
     if (!this.options.id) {
         throw new Error('dropdown-ui: В опциях не указан id');
     }
@@ -47,6 +124,80 @@ function Dropdown (options) {
         itemImage: 'dropdown-ui__item-image'
     };
 
+    /**
+     * Публичный метод для заполнения списка пунктами
+     * В зависимости от опций:
+     * - может показывать картинку для пункта списка
+     * - скрывать часть элементов
+     * - отображать ошибку поиска пункта
+     * @param items [Array] - массив пунктов для отображения в списка
+     * Пример: [{ id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/rogozov.jpg' }]
+     * @param isResetOptionItems [Boolean] - указывает, нужно ли обновить items, объявленные при создании,
+     * необходимо для случаев, когда нужно заменить содержимое дропдауна после его создания
+     */
+    this.fillList = function (items, isResetOptionItems) {
+        var cls = self.cls,
+            options = self.options,
+            fragment = document.createDocumentFragment();
+
+        // Если массив состоит из 1 элемента и передана ошибка - выводим ее
+        if (items.length === 1 && items[0].errorMessage) {
+            var $item = createElem('div', [cls.item, cls.itemError]);
+
+            setText($item, items[0].errorMessage);
+            fragment.appendChild($item);
+        } else {
+
+            // Обновляем список опций, переданных при создании дропдауна
+            if (isResetOptionItems) {
+                options.items = items;
+            }
+
+            // Генерируем список
+            items.forEach(function (item) {
+
+                // Если поле hide === true – не вставляем элемент в список
+                if (item.hide) return;
+
+                var $item = createElem('div', [cls.item, 'clearfix']),
+                    $info = createElem('div', cls.itemInfo),
+                    $title = createElem('div', cls.itemTitle),
+                    $addition = createElem('div', cls.itemAddition);
+
+                // Вставляем текст для составных частей
+                setText($title, item.title);
+                setText($addition, item.addition);
+
+                // Настраиваем картинки
+                if (options.showImage) {
+                    var $imageWrap = createElem('div', cls.itemImageWrap),
+                        $image = createElem('img', cls.itemImage);
+
+                    $image.src = item.image;
+                    $image.setAttribute('width', '32');
+                    $image.setAttribute('height', '32');
+                    $imageWrap.appendChild($image);
+                    $item.appendChild($imageWrap);
+                }
+
+                // Добавляем для элемента data атрибут с id
+                $item.setAttribute('data-dropdown-item', item.id);
+
+                // Вставляем составные части в элемент
+                $info.appendChild($title);
+                $info.appendChild($addition);
+                $item.appendChild($info);
+
+                // Вставляем элемент во фрагмент
+                fragment.appendChild($item);
+            });
+        }
+
+        // Очищаем список и Вставляем элементы
+        self.$list.innerHTML = '';
+        self.$list.appendChild(fragment);
+    };
+
     // 1. Получаем html элемент дропдауна
     getDropdownElem();
 
@@ -56,10 +207,14 @@ function Dropdown (options) {
     // 3. Слушаем события
     listenEvents();
 
+    /**
+     * Получаем объект HTMLElement корневого элемента dropdown
+     * при помощи указанного в опциях id
+     */
     function getDropdownElem () {
         var id = self.options.id;
 
-        self.selector = '[data-dropdown-id=' + self.options.id + ']';
+        self.selector = '[data-dropdown-id=' + id + ']';
         self.$dropdown = $(self.selector);
 
         if (!self.$dropdown.length) {
@@ -69,6 +224,10 @@ function Dropdown (options) {
         }
     }
 
+    /**
+     * Весь шаблон, кроме корневого элемента создаем на клиенте. 
+     * Все css классы описаны в объекте класса Dropdown this.cls
+     */
     function buildTemplate () {
         var fragment = document.createDocumentFragment(),
             options = self.options,
@@ -120,7 +279,7 @@ function Dropdown (options) {
         if (!items || !items.length) {
             throw new Error('dropdown-ui: Добавьте элементы для выбора')
         }
-        fillList(items);
+        self.fillList(items);
 
         fragment.appendChild(self.$inputHidden);
         fragment.appendChild(self.$control);
@@ -130,77 +289,12 @@ function Dropdown (options) {
         self.$dropdown.appendChild(fragment);
     }
 
-    function fillList (items) {
-        var cls = self.cls,
-            fragment = document.createDocumentFragment();
-
-        // Если массив состоит из 1 элемента и передана ошибка - выводим ее
-        if (items.length === 1 && items[0].errorMessage) {
-            var $item = createElem('div', [cls.item, cls.itemError]);
-
-            setText($item, items[0].errorMessage);
-            fragment.appendChild($item);
-        } else {
-            // Генерируем список
-            items.forEach(function (item) {
-
-                // Если поле hide === true – не вставляем элемент в список
-                if (item.hide) return;
-
-                var $item = createElem('div', [cls.item, 'clearfix']),
-                    $info = createElem('div', cls.itemInfo),
-                    $title = createElem('div', cls.itemTitle),
-                    $addition = createElem('div', cls.itemAddition);
-
-                // Вставляем текст для составных частей
-                setText($title, item.title);
-                setText($addition, item.addition);
-
-                // Настраиваем картинки
-                if (self.options.showImage) {
-                    var $imageWrap = createElem('div', cls.itemImageWrap),
-                        $image = createElem('img', cls.itemImage);
-
-                    $image.src = item.image;
-                    $image.setAttribute('width', '32');
-                    $image.setAttribute('height', '32');
-                    $imageWrap.appendChild($image);
-                    $item.appendChild($imageWrap);
-                }
-
-                // Добавляем для элемента data атрибут с id
-                $item.setAttribute('data-dropdown-item', item.id);
-
-                // Вставляем составные части в элемент
-                $info.appendChild($title);
-                $info.appendChild($addition);
-                $item.appendChild($info);
-
-                // Вставляем элемент во фрагмент
-                fragment.appendChild($item);
-            });
-        }
-
-        // Очищаем список и Вставляем элементы
-        self.$list.innerHTML = '';
-        self.$list.appendChild(fragment);
-    }
-
-    function resetList () {
-        self.options.items.forEach(function (item) {
-            if (item.hide) {
-                item.hide = false;
-            }
-        });
-
-        self.selectedItems = [];
-    }
-
     /**
-     *
-     * @param tag
-     * @param [cls]
-     * @returns {Element}
+     * Хелпер для создания html элемент и добавление ему css классов
+     * @param tag {String} - название тега
+     * @param [cls] {Array|String} - классы, которые нужно добавить элементу,
+     * можно передать сразу несколько в виде массива
+     * @returns {HTMLElement}
      */
     function createElem (tag, cls) {
         var elem = document.createElement(tag);
@@ -218,6 +312,9 @@ function Dropdown (options) {
         return elem;
     }
 
+    /**
+     * Все подписки на DOM события в одной функции.
+     */
     function listenEvents () {
         // Focus в инпуте – открываем дропдаун
         events.addEvent(self.$input, 'focus', open);
@@ -289,7 +386,7 @@ function Dropdown (options) {
 
     /**
      * Обработчик ввода данных в инпут
-     * @param e
+     * @param e {Object}
      */
     function onKeyUp (e) {
         var target = e.target || e.srcElement,
@@ -301,64 +398,84 @@ function Dropdown (options) {
             // 1. Сначало фильтруем данные по полю title (содержит имя/фамилию пользователя)
             filtered = smartFilter.get(items, value, { name: 'title', lang: 'ru' });
 
-        // 2a. Отправляем запрос на сервер если ничего не нашли
-        // и переданы опции для запроса
-        if (!filtered.length && server) {
-            // Добавляем в отправляемую дату текущее значение value
-            server.data.value = value;
-
-            // Делаем запрос на сервер
-            sendAjaxRequest({
-                method: server.method,
-                url: server.url,
-                type: server.type,
-                data: server.data
-            }, function (err, result) {
-                if (err) {
-                    console.log('err', err);
-                    throw new Error('dropdown-ui: Ошибка сервера: ', err.message || err.statusText);
-                }
-
-                console.log('result', result);
-
-                setFilterResults(result.items);
-            });
-
-        } else {
-            // 2б. Если опций для сервера передано не было завершаем фильтрацию данных
-            setFilterResults(filtered);
-        }
+        /*
+            2. Если ничего не нашли и переданы опции для поиска на сервере - отправляем запрос,
+            если нет - завершаем фильтрацию
+         */
+        (!filtered.length && server) ? searchDataOnServer(server, value) : setFilterResults(filtered);
     }
 
+    /**
+     * Обработчик фильтрации пунктов меню, если передан пустой массив,
+     * заполнит список ошибкой, если нет, просто вызовет обновления списка
+     * @param filtered
+     */
     function setFilterResults (filtered) {
         // Если ничего так и не нашли возвращаем ошибку
         if (!filtered.length) {
             filtered.push({ errorMessage: 'Пользователь не найден' });
         }
 
-        fillList(filtered);
+        self.fillList(filtered);
     }
 
+    /**
+     * Отправка запроса на сервер
+     * Используем модуль-обертку для ajax запросов
+     * В случае успешного ответа сервера вызовет обработчик фильтрации пунктов меню,
+     * в случае ошибки бросит ошибку с указание err.message или текста статуса ответа
+     * @param server {Object} - объект с опциями запроса к серверу, указываются при создании инстанса дропдауна
+     * @param value {String} - текущее значение запроса по которому нужно искать сопадение данных
+     */
+    function searchDataOnServer (server, value) {
+        // Добавляем в отправляемую дату текущее значение value
+        server.data.value = value;
+
+        // Делаем запрос на сервер
+        sendAjaxRequest({
+            method: server.method,
+            url: server.url,
+            type: server.type,
+            data: server.data
+        }, function (err, result) {
+            if (err) {
+                console.log('err', err);
+                throw new Error('dropdown-ui: Ошибка сервера: ', err.message || err.statusText);
+            }
+
+            setFilterResults(result.items);
+        });
+    }
+
+    /**
+     * Обработчик кликов по списку дропдауна,
+     * используем делегирование для пунктов списка
+     * @param e {Object} - event object
+     */
     function onListClick (e) {
         var event = e || window.event,
             target = event.target || event.srcElement;
 
-        /*
-            Перебираем DOM ноды, пока событие не всплывет до элемента списка
-        */
+        // Перебираем DOM ноды, пока событие не всплывет до пункта списка
         while (target !== this) {
             if (classList.has(target, self.cls.item)) {
-                // Нашли элемент списка, готовим его к вставке __tokens
+                // Нашли пункт списка, готовим его к вставке в __tokens
                 addToken(e, target);
 
                 // Выходим из цикла
                 return;
             }
 
+            // Если таргет оказался не пунктов списка, берем следующего родителя
             target = target.parentNode;
         }
     }
 
+    /**
+     * Обработчик кликов по выбранному токену,
+     * если таргет имеет класс token__delete, клик по нему удаляет токен
+     * @param e {Object} - event object
+     */
     function onTokensClick (e) {
         var event = e || window.event,
             target = event.target || event.srcElement;
@@ -368,6 +485,16 @@ function Dropdown (options) {
         }
     }
 
+    /**
+     * Добавления выбранного пункта списка в токены.
+     * 1. Если выбрана функция мультиселекта позволяем добавлять несколько.
+     * 2. Создает и вставляет в __tokens htmlElement __token
+     * 3. Фиксирует выбранные пункты
+     * 4. Вызывает функцию обновления списка
+     * 5. После успешного добавления вызывает callback onSelect
+     * @param e
+     * @param target
+     */
     function addToken (e, target) {
         var targetId = target.getAttribute('data-dropdown-item'),
             targetItem,
@@ -398,7 +525,7 @@ function Dropdown (options) {
         });
 
         // Обновляем список, чтоб в нем уже не было выбранных элементов
-        fillList(items);
+        self.fillList(items);
 
         // Добавляем токен
         if (targetItem) {
@@ -423,6 +550,10 @@ function Dropdown (options) {
         }
     }
 
+    /**
+     * Создает и вставляет в __tokens htmlElement __token
+     * @param item
+     */
     function buildToken (item) {
         var cls = self.cls,
             $token = createElem('div', [cls.token, 'token', 'token_theme_dark']),
@@ -436,6 +567,14 @@ function Dropdown (options) {
         self.$tokens.insertAdjacentElement('afterBegin', $token);
     }
 
+    /**
+     * Удаление выбранного пункта списка из __tokens
+     * 1. Удаляет htmlElement токена
+     * 2.
+     * 3. Обновляем список
+     * @param e
+     * @param target
+     */
     function removeToken (e, target) {
         var $token = target.parentNode,
             tokenId = $token.getAttribute('data-dropdown-token'),
@@ -444,27 +583,45 @@ function Dropdown (options) {
 
         items.forEach(function (item) {
             if (item.id === +tokenId) {
+                // Убираем поле hide у скрытых пунктов
                 item.hide = false;
-
+                // Удаляем id выбранного пункта списка из памяти
                 selectedItems.splice(selectedItems.indexOf(item.id), 1);
             }
         });
 
+        // Удалем html элемент
         $token.parentNode.removeChild($token);
 
         /*
-         Если уже добавлен хотя бы один токен
-         и выбрана опция мультиселекта – показываем кнопку добавить
+            Если выбрана опция мультиселекта и не выбрано ни одного пункта списка
+            – скрываем кнопку 'Добавить'
          */
         if (options.multiSelect && !self.selectedItems.length) {
             classList.remove(self.$tokenAdd, self.cls.tokenAddShow);
         }
 
-        // Убираем значени удаленного элемента из скрытого инпута для формы
+        // Убираем значение удаленного пункта из скрытого инпута для формы
         self.$inputHidden.value = self.selectedItems.join(',');
 
-        // Обновляем список, добавляем удаленный элементы
-        fillList(items);
+        // Обновляем список
+        self.fillList(items);
+    }
+
+
+    /**
+     * Сбрасываем выбранные пункты списка
+     * - показываем все пункты
+     * - очищаем выбранные id из памяти
+     */
+    function resetList () {
+        self.options.items.forEach(function (item) {
+            if (item.hide) {
+                item.hide = false;
+            }
+        });
+
+        self.selectedItems = [];
     }
 }
 

@@ -45,7 +45,6 @@ app.get('/', function (req, res) {
 });
 
 app.post('/api/users', function (req, res) {
-    console.log('req.body', req.body);
     var body = req.body,
         field = body.field,
         value = body.value,

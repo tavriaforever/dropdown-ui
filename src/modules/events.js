@@ -36,6 +36,11 @@ module.exports = {
             elem.detachEvent('on' + type, handler);
     },
 
+    /**
+     * Подписка на полную загрузку структуры DOM дерева
+     * аналог jQuery $(document).ready(коллбек фукнция)
+     * @param handler {Function} - обработчик события
+     */
     domReady: function (handler) {
         return isSupportModernEvent ?
             document.addEventListener('DOMContentLoaded', handler, false) :

@@ -5,17 +5,24 @@
 module.exports = {
 
     /**
-     * Обертка над querySelectorAll
-     * для выборки элементов в DOM дереве по селектору.
+     * Обертка над querySelectorAllдля выборки элементов в DOM дереве по селектору.
+     *
      * Пример использования:
-     * $('.myNode') -> вернем массив элементов с указанным классом
-     * @param elem {HTMLElement} - DOM нода
-     * @returns {} - массив найденных элементов по селектору
+     * $('.myNode') -> вернется массив HTML элементов с указанным классом
+     *
+     * @param elem {HTMLElement} - html элемент, который ищем в DOM дереве
+     * @returns {NodeList} - массив найденных элементов по селектору
      */
     $: function(elem) {
         return document.querySelectorAll(elem);
     },
 
+    /**
+     * Установка текст для html элемента
+     * @param elem {HTMLElement} - html элемент, который устанавливаем текст
+     * @param text {String} - устанавливаемый текст
+     * @returns {*}
+     */
     setText: function (elem, text) {
         return elem.textContent = text;
     }

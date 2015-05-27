@@ -1,11 +1,10 @@
-// Вставляем css для страницы
+// Вставляем css для страницы примера
 require('./example.styl');
+// Набор полифилов для старых браузеров
 require('../src/modules/polyfills');
 
-// Модуля для кроссбраузерной работы событий
-var events = require('../src/modules/events'),
-    Ajax = require('../src/modules/ajax'),
-    sendAjaxRequest = new Ajax(),
+var Dropdown = require('../src/modules/dropdown.js'),
+    events = require('../src/modules/events'),
     data = [
         { id: 1, title: 'Андрей Рогозов', addition: 'rogozov', image: 'images/rogozov.jpg' },
         { id: 2, title: 'Николай Ильченко', addition: 'tavriaforever', image: 'images/tavriaforever.jpg' },
@@ -23,8 +22,8 @@ var events = require('../src/modules/events'),
 
 // Код начнет выполняться после загрузки DOM
 events.domReady(function () {
-    var Dropdown = require('../src/modules/dropdown.js');
 
+    // Инициализируем новый дропдаун для выбора только одного пункта и поиск данных на сервере
     var dropdown = new Dropdown({
         id: 'first',
         showImage: true,
@@ -47,6 +46,7 @@ events.domReady(function () {
         items: data
     });
 
+    // Инициализируем новый дропдаун для мультивыбора пунктов списка
     var dropdown2 = new Dropdown({
         id: 'second',
         showImage: true,
@@ -65,6 +65,7 @@ events.domReady(function () {
         items: data
     });
 
+    // Инициализируем новый дропдаун со списком пунктов без изображений
     var dropdown3 = new Dropdown({
         id: 'third',
         multiSelect: true,
